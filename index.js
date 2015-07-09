@@ -40,28 +40,4 @@ Manager.prototype.init = function(callback){
 
 
 
-/*
-var dbuscli = new DBus();
-var bus = dbuscli.getBus('session');
-
-bus.getInterface('holusion.desktop.Panel', '/holusion/desktop/Panel', 'holusion.desktop.Panel.Interface1', function(err, iface) {
-    if(err){
-      return console.log(err);
-    }
-    iface.Show();
-    setTimeout(function(){
-      console.log("hidding")
-      iface.Hide();
-      //iface.Show();
-    },6000);
-    process.on("SIGINT",function(){
-      console.log("exiting");
-      iface.Exit['finish'] = function(result) {
-    	   process.exit();
-    	};
-      iface.Exit();
-
-    })
-});
-*/
 module.exports = Manager;
