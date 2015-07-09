@@ -4,6 +4,7 @@
   "scripts": {
     "start": "./node_modules/.bin/electron app.js"
   },
+  "main":"index.js",
   "dependencies": {
     "electron-prebuilt": "*",
     "dbus": "^0.2.11"
