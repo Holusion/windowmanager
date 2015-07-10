@@ -20,12 +20,14 @@ Manager.prototype.init = function(callback){
           iface.Show();
         },
         hide:function(cb){
+          cb = cb||function(){};
           iface.Hide['finish'] = function(result) {
              cb(result);
           };
           iface.Hide();
         },
         quit:function(cb){
+          cb = cb||function(){};
           iface.Exit['finish'] = function(result) {
              cb(result);
           };

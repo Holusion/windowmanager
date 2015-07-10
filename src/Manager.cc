@@ -17,6 +17,9 @@ Manager::Manager() {
 }
 
 Manager::~Manager() {
+  if(this->dpy){
+    XCloseDisplay(this->dpy);
+  }
 }
 
 void Manager::Init(Handle<Object> exports) {
@@ -60,10 +63,48 @@ void Manager::Manage(const v8::FunctionCallbackInfo<v8::Value>& args){
                    SubstructureRedirectMask|SubstructureNotifyMask|ButtonPressMask
                   |EnterWindowMask|LeaveWindowMask|StructureNotifyMask
                   |PropertyChangeMask);
-
   obj->scan();
   XSync(obj->dpy, False);
-  args.GetReturnValue().Set(Number::New(isolate, XConnectionNumber(obj->dpy)));
+  //Now manage events
+  int fd = XConnectionNumber(obj->dpy);
+  uv_poll_t* handle = new uv_poll_t;
+  handle->data = obj;
+  //obj.Ref(); //Necessary?
+  uv_poll_init(uv_default_loop(), handle, fd);
+  uv_poll_start(handle, UV_READABLE, EIO_Loop);
+  args.GetReturnValue().Set(Number::New(isolate, fd));
+}
+
+void Manager::EIO_Loop(uv_poll_t* handle, int status, int events) {
+  XEvent event;
+  Manager* obj = static_cast<Manager*>(handle->data);
+  // main event loop
+  while(XPending(obj->dpy)) {
+   XNextEvent(obj->dpy, &event);
+   //Handle event
+   fprintf(stderr, "Got %s (%d)\n", event_names[event.type], event.type);
+   switch(event.type){
+     case MapRequest:
+      obj->event_maprequest(&event);
+      break;
+   }
+ }
+}
+void Manager::event_maprequest(XEvent *e) {
+  // read the window attrs, then add it to the managed windows...
+  XWindowAttributes wa;
+  XMapRequestEvent *ev = &e->xmaprequest;
+  if(!XGetWindowAttributes(this->dpy, ev->window, &wa)) {
+    return;
+  }
+  if(wa.override_redirect)
+    return;
+  std::list<Window>::iterator find = std::find(this->windows.begin(), this->windows.end(), ev->window);
+  if(find == this->windows.end()) {
+    // only map new windows
+    this->add_window(ev->window, &wa);
+    //nwm_emit(onRearrange, NULL);
+  }
 }
 void Manager::scan (){
   unsigned int i, num;
@@ -96,10 +137,15 @@ void Manager::scan (){
 void Manager::add_window(Window win, XWindowAttributes *watt){
   Window trans = None;
   Bool isfloating = False;
-  XConfigureEvent ce;
-  //nwm_window event_data;
-  XWindowChanges wc;
 
   XGetTransientForHint(this->dpy, win, &trans);
   isfloating = (trans != None);
+  this->windows.push_back(win);
+
+  if(isfloating) {
+    XRaiseWindow(this->dpy, win);
+  }
+  XChangeSaveSet(this->dpy,win,SetModeInsert);
+  XReparentWindow(this->dpy,win,this->root,0,0);
+  XMapWindow(this->dpy, win);
 }
