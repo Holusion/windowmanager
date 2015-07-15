@@ -2,9 +2,8 @@ var Manager = require('./build/Release/Manager').Manager
   , DBus = require("dbus")
   , util = require("util");
 
-Manager.prototype.init = function(callback){
+Manager.prototype.initDbus = function(){
   var self = this;
-  this.manage(); //c++ addon init
   this.bus = new DBus();
   this.session =  this.bus.getBus("session");
   this.session.getInterface('holusion.desktop.Panel', '/holusion/desktop/Panel', 'holusion.desktop.Panel.Interface1', function(err, iface) {
@@ -37,6 +36,12 @@ Manager.prototype.init = function(callback){
     }
     callback(err);
   });
+}
+
+Manager.prototype.init = function(callback){
+
+  this.manage(); //c++ addon init
+  this.initDbus();
   return this; //chainable with constructor
 }
 
