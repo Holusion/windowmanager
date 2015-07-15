@@ -7,18 +7,18 @@ Persistent<Function> Manager::constructor;
 Manager::Manager() {
   Isolate* isolate = Isolate::GetCurrent();
   HandleScope scope(isolate);
-  if ( ( this->dpy = XOpenDisplay(NULL) ) == NULL ) {
+  if ( ( this->wm.dpy = XOpenDisplay(NULL) ) == NULL ) {
     isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate,"cannot connect to X server " )));
 
   }else{
-    this->screen = DefaultScreen(this->dpy);
-    this->root = RootWindow(this->dpy, this->screen);
+    this->wm.screen = DefaultScreen(this->wm.dpy);
+    this->wm.root = RootWindow(this->wm.dpy, this->wm.screen);
   }
 }
 
 Manager::~Manager() {
-  if(this->dpy){
-    XCloseDisplay(this->dpy);
+  if(this->wm.dpy){
+    XCloseDisplay(this->wm.dpy);
   }
 }
 
@@ -59,14 +59,14 @@ void Manager::Manage(const v8::FunctionCallbackInfo<v8::Value>& args){
   Isolate* isolate = Isolate::GetCurrent();
   HandleScope scope(isolate);
   Manager* obj = ObjectWrap::Unwrap<Manager>(args.Holder());
-  XSelectInput(obj->dpy,obj->root,
+  XSelectInput(obj->wm.dpy,obj->wm.root,
                    SubstructureRedirectMask|SubstructureNotifyMask|ButtonPressMask
                   |EnterWindowMask|LeaveWindowMask|StructureNotifyMask
                   |PropertyChangeMask);
   obj->scan();
-  XSync(obj->dpy, False);
+  XSync(obj->wm.dpy, False);
   //Now manage events
-  int fd = XConnectionNumber(obj->dpy);
+  int fd = XConnectionNumber(obj->wm.dpy);
   uv_poll_t* handle = new uv_poll_t;
   handle->data = obj;
   //obj.Ref(); //Necessary?
@@ -79,53 +79,50 @@ void Manager::EIO_Loop(uv_poll_t* handle, int status, int events) {
   XEvent event;
   Manager* obj = static_cast<Manager*>(handle->data);
   // main event loop
-  while(XPending(obj->dpy)) {
-   XNextEvent(obj->dpy, &event);
+  while(XPending(obj->wm.dpy)) {
+   XNextEvent(obj->wm.dpy, &event);
    //Handle event
-   fprintf(stderr, "Got %s (%d)\n", event_names[event.type], event.type);
+   //fprintf(stderr, "Got %s (%d)\n", event_names[event.type], event.type);
    switch(event.type){
      case MapRequest:
-      obj->event_maprequest(&event);
+     obj->search(event.xmaprequest.window);
+      event_maprequest(&event,&obj->wm);
+      break;
+    case DestroyNotify:
+      //obj->event_destroynotify(&event);
+      break;
+    case ConfigureRequest:
+      //event_configurerequest(&event);
       break;
    }
  }
 }
-void Manager::event_maprequest(XEvent *e) {
-  // read the window attrs, then add it to the managed windows...
+void Manager::search (Window win){
   XWindowAttributes wa;
-  XMapRequestEvent *ev = &e->xmaprequest;
-  if(!XGetWindowAttributes(this->dpy, ev->window, &wa)) {
+  if(!XGetWindowAttributes(this->wm.dpy, win, &wa)
+    || wa.override_redirect ) {
+    fprintf(stderr, "XGetWindowAttributes failed\n");
     return;
   }
-  if(wa.override_redirect)
-    return;
-  std::list<Window>::iterator find = std::find(this->windows.begin(), this->windows.end(), ev->window);
-  if(find == this->windows.end()) {
-    // only map new windows
-    this->add_window(ev->window, &wa);
-    //nwm_emit(onRearrange, NULL);
+  List* found = NULL;
+  List_search(this->wm.windows, found, (void*) win);
+  if(!found) { // only map new windows
+    this->add_window(win, &wa);
+    // emit a rearrange
   }
 }
 void Manager::scan (){
   unsigned int i, num;
   Window d1, d2, *wins = NULL;
   XWindowAttributes watt;
-  if(XQueryTree(this->dpy, this->root, &d1, &d2, &wins, &num)) {
+  if(XQueryTree(this->wm.dpy, this->wm.root, &d1, &d2, &wins, &num)) {
    for(i = 0; i < num; i++) {
-     // if we can't read the window attributes,
-     // or the window is a popup (transient or override_redirect), skip it
-     if(!XGetWindowAttributes(this->dpy, wins[i], &watt)
-     || watt.override_redirect || XGetTransientForHint(this->dpy, wins[i], &d1)) {
-       continue;
-     }
-     // visible or minimized window ("Iconic state")
-     if(watt.map_state == IsViewable )//|| getstate(wins[i]) == IconicState)
-       add_window(wins[i], &watt);
+     search(wins[i]);
    }
    for(i = 0; i < num; i++) { /* now the transients */
-     if(!XGetWindowAttributes(this->dpy, wins[i], &watt))
+     if(!XGetWindowAttributes(this->wm.dpy, wins[i], &watt))
        continue;
-     if(XGetTransientForHint(this->dpy, wins[i], &d1)
+     if(XGetTransientForHint(this->wm.dpy, wins[i], &d1)
      && (watt.map_state == IsViewable )) //|| getstate(wins[i]) == IconicState))
        add_window(wins[i], &watt);
    }
@@ -137,15 +134,22 @@ void Manager::scan (){
 void Manager::add_window(Window win, XWindowAttributes *watt){
   Window trans = None;
   Bool isfloating = False;
-
-  XGetTransientForHint(this->dpy, win, &trans);
+  XGetTransientForHint(this->wm.dpy, win, &trans);
   isfloating = (trans != None);
-  this->windows.push_back(win);
+  List_push(&this->wm.windows, (void *)win);
 
   if(isfloating) {
-    XRaiseWindow(this->dpy, win);
+    XRaiseWindow(this->wm.dpy, win);
   }
-  XChangeSaveSet(this->dpy,win,SetModeInsert);
-  XReparentWindow(this->dpy,win,this->root,0,0);
-  XMapWindow(this->dpy, win);
+  XChangeSaveSet(this->wm.dpy,win,SetModeInsert);
+  XReparentWindow(this->wm.dpy,win,this->wm.root,0,0);
+  XMapWindow(this->wm.dpy, win);
+}
+
+void Manager::remove_window(Window win){
+  List *item = NULL;
+  List_search(this->wm.windows, item, (void*) win);
+  if(item){
+    List_remove(&this->wm.windows,item);
+  }
 }
