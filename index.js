@@ -2,7 +2,8 @@ var Manager = require('./build/Release/Manager').Manager
   , DBus = require("dbus")
   , util = require("util");
 
-Manager.prototype.initDbus = function(){
+Manager.prototype.initDbus = function(callback){
+  callback = callback || function(){};
   var self = this;
   this.bus = new DBus();
   this.session =  this.bus.getBus("session");
@@ -11,12 +12,13 @@ Manager.prototype.initDbus = function(){
       callback();
     }else{
       self.hpanel = {
-        show:function(cb){
+        open:function(path,cb){
           cb = cb||function(){};
-          iface.Show['finish'] = function(result) {
+          iface.Open['finish'] = function(result) {
              cb(result);
           };
-          iface.Show();
+          console.log("showing interface");
+          iface.Open([path]);
         },
         hide:function(cb){
           cb = cb||function(){};
@@ -39,12 +41,14 @@ Manager.prototype.initDbus = function(){
 }
 
 Manager.prototype.init = function(callback){
-
   this.manage(); //c++ addon init
-  this.initDbus();
+  this.initDbus(callback);
   return this; //chainable with constructor
 }
-
+Manager.prototype.close = function(){
+  console.log("closing menu panel")
+  //this.hpanel.quit();
+}
 
 
 module.exports = Manager;

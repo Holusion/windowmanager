@@ -2,7 +2,7 @@
   "name": "WindowManager",
   "version": "0.0.1",
   "scripts": {
-    "start": "./node_modules/.bin/electron app.js"
+    "start": "node app.js"
   },
   "main":"index.js",
   "dependencies": {
