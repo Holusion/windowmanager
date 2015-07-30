@@ -4,13 +4,18 @@
 var Manager = require("./index");
 var manager = new Manager();
 manager.init(function(err){
-  console.log("initialized manager");
-  if(!err && manager.hpanel){
+  if(err){
+    return console.log(err);
+  }else if(!err && manager.hpanel){
     console.log("managing menu");
-    manager.hpanel.open(__dirname);
+    manager.hpanel.open(__dirname,function(e){
+      console.log("opened panel");
+    });
 
     setInterval(function(){
-      manager.hpanel.hide();
+      manager.hpanel.hide(function(e){
+        
+      });
       setTimeout(function(){
         manager.hpanel.open(__dirname);
       },3000)
