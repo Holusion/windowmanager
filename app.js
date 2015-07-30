@@ -11,20 +11,10 @@ manager.init(function(err){
     manager.hpanel.open(__dirname,function(e){
       console.log("opened panel");
     });
-
-    setInterval(function(){
-      manager.hpanel.hide(function(e){
-        
-      });
-      setTimeout(function(){
-        manager.hpanel.open(__dirname);
-      },3000)
-    },6000)
     process.on("SIGINT",function(){
-      manager.hpanel.quit(function(){
-        console.log("exiting");
-        process.exit();
-      });
-    })
+      console.log("exiting");
+      manager.hpanel.quit(function(){});
+      process.exit();
+    });
   }
 });
