@@ -113,7 +113,7 @@ MenuInterface.prototype.getCliInterface = function (callback) {
     return callback(null,{
       open:function(path,cb){
         console.log("opened");
-        self.child_process = spawn(self.executableName,["--show",path], {stdio:"inherit");
+        self.child_process = spawn(self.executableName,["--show",path], {stdio:"inherit"});
         self.child_process.on("exit",function(code){
           console.log("child_process exitted")
           self.child_process = null;
