@@ -13,7 +13,6 @@
   },
   "devDependencies": {
     "chai": "^3.2.0",
-    "mocha": "^2.2.5",
-    "Hpanel-prebuilt":"git+ssh://git@dev.holusion.net:Hpanel-prebuilt.git"
+    "mocha": "^2.2.5"
   }
 }

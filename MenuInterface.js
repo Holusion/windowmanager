@@ -1,4 +1,5 @@
-var DBus = require("dbus")
+var path = require("path")
+  , DBus = require("dbus")
   , spawn = require("child_process").spawn
   , Promise = require('es6-promise').Promise;
 
@@ -102,20 +103,25 @@ MenuInterface.prototype.getCliInterface = function (callback) {
   var self = this;
   var which = spawn("which",[this.executableName]);
   var absPath = "";
+  which.stdout.on("data",function(d){
+    absPath +=d;
+  })
   which.on("close",function(e){
     if(e){
       return callback(self.executableName+" executable not found");
     }
     return callback(null,{
       open:function(path,cb){
-        console.log("open spawn")
-        self.child_process = spawn(self.executableName,["--show ",path], {stdio:"inherit"});
+        console.log("opened");
+        self.child_process = spawn(self.executableName,["--show",path], {stdio:"inherit");
         self.child_process.on("exit",function(code){
+          console.log("child_process exitted")
           self.child_process = null;
         });
         cb(null);
       },
       close:function(cb){
+        console.log("closing")
         this.quit(cb);
       },
       quit:function(cb){
