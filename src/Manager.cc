@@ -7,9 +7,9 @@ Persistent<Function> Manager::constructor;
 Manager::Manager() {
   Isolate* isolate = Isolate::GetCurrent();
   HandleScope scope(isolate);
+  this->wm.windows = NULL;
   if ( ( this->wm.dpy = XOpenDisplay(NULL) ) == NULL ) {
     isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate,"cannot connect to X server " )));
-
   }else{
     this->wm.screen = DefaultScreen(this->wm.dpy);
     this->wm.root = RootWindow(this->wm.dpy, this->wm.screen);
@@ -63,8 +63,9 @@ void Manager::Manage(const v8::FunctionCallbackInfo<v8::Value>& args){
                    SubstructureRedirectMask|SubstructureNotifyMask|ButtonPressMask
                   |EnterWindowMask|LeaveWindowMask|StructureNotifyMask
                   |PropertyChangeMask);
-  
+
   XSync(obj->wm.dpy, False);
+  obj->scan();
   //Now manage events
   int fd = XConnectionNumber(obj->wm.dpy);
   uv_poll_t* handle = new uv_poll_t;
@@ -122,9 +123,10 @@ void Manager::scan (){
    for(i = 0; i < num; i++) { /* now the transients */
      if(!XGetWindowAttributes(this->wm.dpy, wins[i], &watt))
        continue;
-     if(XGetTransientForHint(this->wm.dpy, wins[i], &d1)
-     && (watt.map_state == IsViewable )) //|| getstate(wins[i]) == IconicState))
-       add_window(wins[i], &watt);
+     if(XGetTransientForHint(this->wm.dpy, wins[i], &d1)//|| getstate(wins[i]) == IconicState))
+     && (watt.map_state == IsViewable )){
+        add_window(wins[i], &watt);
+     }
    }
    if(wins) {
      XFree(wins);

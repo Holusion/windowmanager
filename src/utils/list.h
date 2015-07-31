@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 /**
  * This is made dfrom list in nwm
  * https://github.com/mixu/nwm/blob/master/src/nwm/list.h

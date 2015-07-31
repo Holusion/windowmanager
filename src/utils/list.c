@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "list.h"
 
 List* List_push(List **list, void *data) {
