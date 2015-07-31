@@ -1,25 +1,29 @@
-var Manager = require('./build/Release/Manager').Manager
+var XManager = require('./build/Release/Manager').Manager
   , MenuInterface = require("./MenuInterface")
-  , util = require("util");
+  , util = require("util")
+  , EventEmitter = require('events').EventEmitter;
 
-Manager.prototype.initDbus = function(callback){
+function WindowManager (){
+  this.xmaster = XManager();
+  this.hpanel= new MenuInterface();
+}
+util.inherits(WindowManager,EventEmitter);
+WindowManager.prototype.initDbus = function(callback){
   callback = callback || function(){};
   var self = this;
-  var menu = new MenuInterface(true);
-  this.hpanel = menu;
-  menu.iface.catch(callback).then(function(iface){callback(null)});
+  this.hpanel.init();
+  this.hpanel.iface.catch(callback).then(function(iface){callback(null)});
 }
 
-
-Manager.prototype.init = function(callback){
-  this.manage(); //c++ addon init
+WindowManager.prototype.init = function(callback){
+  this.xmaster.manage(); //c++ addon init
   this.initDbus(callback);
   return this; //chainable with constructor
 }
-Manager.prototype.close = function(){
+WindowManager.prototype.close = function(){
   console.log("closing menu panel")
   //this.hpanel.quit();
 }
 
 
-module.exports = Manager;
+module.exports = WindowManager;
