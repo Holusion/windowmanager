@@ -1,8 +1,8 @@
 /**
  * Manager example usage
  */
-var Manager = require("./index");
-var manager = new Manager();
+var WindowManager = require("./index");
+var manager = new WindowManager();
 manager.init(function(err){
   if(err){
     return console.log(err);
