@@ -4,22 +4,17 @@
 var Manager = require("./index");
 var manager = new Manager();
 manager.init(function(err){
-  console.log("initialized manager");
-  if(!err && manager.hpanel){
+  if(err){
+    return console.log(err);
+  }else if(!err && manager.hpanel){
     console.log("managing menu");
-    manager.hpanel.open(__dirname);
-
-    setInterval(function(){
-      manager.hpanel.hide();
-      setTimeout(function(){
-        manager.hpanel.open(__dirname);
-      },3000)
-    },6000)
+    manager.hpanel.open(__dirname,function(e){
+      console.log("opened panel");
+    });
     process.on("SIGINT",function(){
-      manager.hpanel.quit(function(){
-        console.log("exiting");
-        process.exit();
-      });
-    })
+      console.log("exiting");
+      manager.hpanel.quit(function(){});
+      process.exit();
+    });
   }
 });
