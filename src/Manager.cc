@@ -63,7 +63,7 @@ void Manager::Manage(const v8::FunctionCallbackInfo<v8::Value>& args){
                    SubstructureRedirectMask|SubstructureNotifyMask|ButtonPressMask
                   |EnterWindowMask|LeaveWindowMask|StructureNotifyMask
                   |PropertyChangeMask);
-  obj->scan();
+  
   XSync(obj->wm.dpy, False);
   //Now manage events
   int fd = XConnectionNumber(obj->wm.dpy);
