@@ -9,7 +9,6 @@
 extern "C" {
   #include <X11/Xlib.h>
   #include <X11/Xproto.h>
-  #include <X11/extensions/Xinerama.h>
   #include "utils/errors.h"
   #include "utils/x_events.h"
   #include "utils/wm.h"
