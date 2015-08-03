@@ -17,4 +17,6 @@ manager.init(function(err){
       process.exit();
     });
   }
+}).on("KeyPress",function(key){
+  console.log("key pressed : ",key);
 });

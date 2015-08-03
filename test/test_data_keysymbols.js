@@ -1,6 +1,6 @@
-describe("XKeyboard - keysymbols.json",function(){
+describe("data - keysymbols.json",function(){
   it("exports a list",function(){
-    var syms = require('../lib/keysymbols.json').records;
+    var syms = require('../data/keysymbols.json').records;
     expect(typeof syms).to.equal("object");
     for (var k in syms){
       try{

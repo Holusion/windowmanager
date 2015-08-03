@@ -1,7 +1,12 @@
-var XManager = require('./lib/XManager')
+var util = require("util")
+  , EventEmitter = require('events').EventEmitter
+  , revert = require("revert-keys")
+  , XManager = require('./lib/XManager')
   , MenuInterface = require("./lib/MenuInterface")
-  , util = require("util")
-  , EventEmitter = require('events').EventEmitter;
+  , actions = require("./data/shortcuts.json").records
+  , shortcuts = revert(actions);
+
+
 
 function WindowManager (){
   this.xmaster = new XManager();
@@ -16,13 +21,20 @@ WindowManager.prototype.initDbus = function(callback){
 }
 
 WindowManager.prototype.init = function(callback){
-
-  this.xmaster.init(); //c++ addon init
+  var self = this;
+  this.xmaster.init();
+  this.xmaster.on("KeyPress",function(key){
+    if(shortcuts[key]){
+      self.emit("KeyPress",key);
+    }else{
+      //console.log("inactive key : "+key);
+    }
+  })
   this.initDbus(callback);
   return this; //chainable with constructor
 }
 WindowManager.prototype.close = function(){
-  console.log("closing menu panel")
+  console.log("closing menu panel");
   //this.hpanel.quit();
 }
 
