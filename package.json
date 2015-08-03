@@ -1,15 +1,16 @@
 {
   "name": "WindowManager",
   "version": "0.0.1",
-  "repository":"http://scm.holusion.net/windowmanager.git",
+  "repository": "http://scm.holusion.net/windowmanager.git",
   "scripts": {
     "start": "node app.js",
-    "test":"mocha"
+    "test": "mocha"
   },
   "main": "index.js",
   "dependencies": {
     "dbus": "^0.2.11",
-    "es6-promise": "^2.3.0"
+    "es6-promise": "^2.3.0",
+    "x11": "^1.0.3"
   },
   "devDependencies": {
     "chai": "^3.2.0",

@@ -1,10 +1,10 @@
-var XManager = require('./build/Release/Manager').Manager
-  , MenuInterface = require("./MenuInterface")
+var XManager = require('./lib/XManager')
+  , MenuInterface = require("./lib/MenuInterface")
   , util = require("util")
   , EventEmitter = require('events').EventEmitter;
 
 function WindowManager (){
-  this.xmaster = XManager();
+  this.xmaster = new XManager();
   this.hpanel= new MenuInterface();
 }
 util.inherits(WindowManager,EventEmitter);
@@ -16,7 +16,8 @@ WindowManager.prototype.initDbus = function(callback){
 }
 
 WindowManager.prototype.init = function(callback){
-  this.xmaster.manage(); //c++ addon init
+
+  this.xmaster.init(); //c++ addon init
   this.initDbus(callback);
   return this; //chainable with constructor
 }
