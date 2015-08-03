@@ -1,4 +1,4 @@
-var MenuInterface = require("../MenuInterface")
+var MenuInterface = require("../lib/MenuInterface")
 , Promise = require('es6-promise').Promise;
 
 describe("MenuInterface.getDbusInterface",function(){

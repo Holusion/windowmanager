@@ -1,4 +1,4 @@
-var MenuInterface = require("../MenuInterface");
+var MenuInterface = require("../lib/MenuInterface");
 
 describe("MenuInterface.getCliInterface",function(){
   it("can find executable",function(done){
