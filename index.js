@@ -25,9 +25,9 @@ WindowManager.prototype.init = function(callback){
   this.xmaster.init();
   this.xmaster.on("KeyPress",function(key){
     if(shortcuts[key]){
-      self.emit("KeyPress",key);
+      self.emit("command",shortcuts[key]);
     }else{
-      //console.log("inactive key : "+key);
+      console.log("inactive key : "+key);
     }
   })
   this.initDbus(callback);
