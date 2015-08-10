@@ -2,6 +2,7 @@ var util = require("util")
   , EventEmitter = require('events').EventEmitter
   , revert = require("revert-keys")
   , XManager = require('./lib/XManager')
+  , Launcher = require("desktop-launch")
   , MenuInterface = require("./lib/MenuInterface")
   , actions = require("./data/shortcuts.json").records
   , shortcuts = revert(actions);
@@ -11,6 +12,7 @@ var util = require("util")
 function WindowManager (){
   this.xmaster = new XManager();
   this.hpanel= new MenuInterface();
+  this.launcher = new Launcher();
 }
 util.inherits(WindowManager,EventEmitter);
 WindowManager.prototype.initDbus = function(callback){
@@ -33,9 +35,17 @@ WindowManager.prototype.init = function(callback){
   this.initDbus(callback);
   return this; //chainable with constructor
 }
+
+WindowManager.prototype.launch = function(file){
+  console.log("launching :",file);
+  this.launcher.start(file);
+  this.hpanel.quit();
+}
+
 WindowManager.prototype.close = function(){
   console.log("closing menu panel");
-  //this.hpanel.quit();
+  this.hpanel.quit();
+  this.launcher.killChild();
 }
 
 

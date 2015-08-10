@@ -18,12 +18,10 @@ manager.init(function(err){
   if(err){
     return console.log(err);
   }else if(!err && manager.hpanel){
-    
+
     process.on("SIGINT",function(){
-      console.log("exiting");
-      manager.hpanel.quit(function(){
-        process.exit();
-      });
+      manager.close();
+      process.exit();
     });
   }
 }).on("command",function(action){
