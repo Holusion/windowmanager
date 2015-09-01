@@ -37,9 +37,15 @@ WindowManager.prototype.init = function(callback){
 }
 
 WindowManager.prototype.launch = function(file){
-  console.log("launching :",file);
-  this.launcher.start(file);
   this.hpanel.quit();
+  this.launcher.start(file).catch(function(e){
+    console.error("WindowManager launch error : ",e);
+  });
+}
+
+WindowManager.prototype.expose = function(folder){
+  this.launcher.killChild();
+  this.hpanel.open(folder);
 }
 
 WindowManager.prototype.close = function(){
