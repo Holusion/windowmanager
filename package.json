@@ -8,12 +8,12 @@
   },
   "main": "index.js",
   "dependencies": {
-    "dbus": "^0.2.11",
     "es6-promise": "^2.3.0",
     "x11": "^1.0.3",
-    "xpixmap":"*",
-    "revert-keys":"*",
-    "desktop-launch":"*"
+    "xpixmap": "*",
+    "revert-keys": "*",
+    "desktop-launch": "*",
+    "dbus-native": "^0.2.0"
   },
   "devDependencies": {
     "chai": "^3.2.0",
