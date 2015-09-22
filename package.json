@@ -8,7 +8,6 @@
   },
   "main": "index.js",
   "dependencies": {
-    "es6-promise": "^2.3.0",
     "x11": "^1.0.3",
     "xpixmap": "*",
     "revert-keys": "*",
