@@ -41,11 +41,11 @@ describe("MenuInterface.getDbusInterface",function(){
       var exampleIface = {
         name: iface,
         methods: {
-            doStuff: ['s', 's']
+            doStuff: [null, 's']
         }
       };
       var example = {
-        doStuff: function(s) {
+        doStuff: function() {
             return 'Received "' + s + '" - this is a reply';
         }
       };
@@ -59,6 +59,7 @@ describe("MenuInterface.getDbusInterface",function(){
       mint.getDbusInterface(function(err,iface){
         expect(err).to.be.null;
         expect(typeof iface).to.equal("object");
+        expect(iface).to.have.property("doStuff");
         done();
       });
     });
