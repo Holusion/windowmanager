@@ -52,6 +52,7 @@ WindowManager.prototype.close = function(){
   console.log("closing menu panel");
   this.hpanel.quit();
   this.launcher.killChild();
+  this.xmaster.exit(); //Closing background window.
 }
 
 
