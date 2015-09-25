@@ -1,4 +1,4 @@
-var XKeyboard = require("../lib/XKeyboard");
+var XKeyboard = require("../lib/Xutils/XKeyboard");
 
 describe("XKeyboard",function(){
   it("getKey",function(){
