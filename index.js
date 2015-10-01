@@ -32,6 +32,9 @@ WindowManager.prototype.init = function(callback){
       console.log("inactive key : "+key);
     }
   })
+  this.launcher.on("end",function(){
+    self.emit("end");
+  })
   this.initDbus(callback);
   return this; //chainable with constructor
 }
