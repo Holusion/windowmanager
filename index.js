@@ -32,11 +32,18 @@ WindowManager.prototype.init = function(callback){
       console.log("inactive key : "+key);
     }
   })
+  this.hasChild = false;
   this.xmaster.on("expose",function(){
-    self.emit("end")
+    if(!self.hasChild){
+      self.emit("end")
+    }
+    self.hasChild = false;
   })
   this.launcher.on("end",function(){
-    //not reliable enough
+    if(!self.hasChild){
+      self.emit("end")
+    }
+    self.hasChild = false;
   })
   this.initDbus(callback);
   return this; //chainable with constructor
@@ -47,6 +54,7 @@ WindowManager.prototype.launch = function(file){
   this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
   });
+  this.hasChild = true;
 }
 
 WindowManager.prototype.expose = function(folder){
