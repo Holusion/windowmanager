@@ -32,26 +32,29 @@ WindowManager.prototype.init = function(callback){
       console.log("inactive key : "+key);
     }
   })
-  this.onEnd = this.emit.bind(this,"end");
+  this.hasChild = false;
   this.xmaster.on("expose",function(){
-    console.log("xmaster EXPOSE");
+    if(!self.hasChild){
+      self.emit("end")
+    }
+    self.hasChild = false;
   })
-  //this.launcher.on("end",this.onEnd)
+  this.launcher.on("end",function(){
+    if(!self.hasChild){
+      self.emit("end")
+    }
+    self.hasChild = false;
+  })
   this.initDbus(callback);
   return this; //chainable with constructor
 }
 
 WindowManager.prototype.launch = function(file){
-  var self = this;
-  console.log("LAUNCHING : ",file);
   this.hpanel.quit();
-  this.xmaster.removeListener('expose', this.onEnd);
   this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
-  }).then(function(){
-    console.log("setting expose listener for : ",file);
-    this.xmaster.once("expose",self.onEnd);
-  })
+  });
+  this.hasChild = true;
 }
 
 WindowManager.prototype.expose = function(folder){
