@@ -57,7 +57,11 @@ WindowManager.prototype.launch = function(file){
   this.hasChild = true;
 }
 
-WindowManager.prototype.expose = function(folder){
+WindowManager.prototype.expose = function(){
+  this.launcher.killChild();
+  this.xmaster.focus();
+}
+WindowManager.prototype.open = function(folder){
   this.launcher.killChild();
   this.hpanel.open(folder);
 }
