@@ -13,6 +13,15 @@ function WindowManager (){
   this.xmaster = new XManager();
   this.hpanel= new MenuInterface();
   this.launcher = new Launcher();
+  this.launcher.on("error",function(e){
+    console.error("Launcher Error : ",e);
+  });
+  this.launcher.on("stdout",function(o){
+    console.log("player stdout : "+o);
+  });
+  this.launcher.on("stderr",function(o){
+    console.log("player stderr : "+o);
+  });
 }
 util.inherits(WindowManager,EventEmitter);
 WindowManager.prototype.initDbus = function(callback){
