@@ -38,7 +38,7 @@ WindowManager.prototype.init = function(callback){
     if(shortcuts[key]){
       self.emit("command",shortcuts[key]);
     }else{
-      console.log("inactive key : "+key);
+      //console.log("inactive key : "+key);
     }
   })
   this.hasChild = false;
