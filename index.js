@@ -60,9 +60,9 @@ WindowManager.prototype.init = function(callback){
 
 WindowManager.prototype.launch = function(file,opts){
   var self = this;
-  opts = opts||{};
+  opts = (typeof opts === "object")?sanitizeOptions(opts)||{};
   this.hpanel.quit();
-  this.launcher.start(file,opts).catch(function(e){
+  this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
     this.launcher.finder.find(file).then(function(entry){
       console.error("Was trying to launch : ",file,"with openner :",entry);
@@ -70,7 +70,16 @@ WindowManager.prototype.launch = function(file,opts){
   });
   this.hasChild = true;
 }
-
+WindowManager.prototype.sanitizeOptions = function(opts){
+  var ret = {};
+  var supported = ["env","cwd","shell"];
+  Object.keys(opts).forEach(function(key){
+    if(supported.indexOf(key) !=-1){
+      ret[key] = opts[key];
+    }
+  })
+  return ret;
+}
 WindowManager.prototype.expose = function(){
   this.launcher.killChild();
   this.xmaster.focus();
