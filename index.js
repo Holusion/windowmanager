@@ -59,9 +59,13 @@ WindowManager.prototype.init = function(callback){
 }
 
 WindowManager.prototype.launch = function(file){
+  var self = this;
   this.hpanel.quit();
   this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
+    this.launcher.finder.find(file).then(function(entry){
+      console.error("Was trying to launch : ",file,"with openner :",entry);
+    })
   });
   this.hasChild = true;
 }
