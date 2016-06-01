@@ -60,7 +60,7 @@ WindowManager.prototype.init = function(callback){
 
 WindowManager.prototype.launch = function(file,opts){
   var self = this;
-  opts = (typeof opts === "object")?sanitizeOptions(opts)||{};
+  opts = (typeof opts === "object")?sanitizeOptions(opts):{};
   this.hpanel.quit();
   this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
