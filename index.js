@@ -58,10 +58,11 @@ WindowManager.prototype.init = function(callback){
   return this; //chainable with constructor
 }
 
-WindowManager.prototype.launch = function(file){
+WindowManager.prototype.launch = function(file,opts){
   var self = this;
+  opts = opts||{};
   this.hpanel.quit();
-  this.launcher.start(file).catch(function(e){
+  this.launcher.start(file,opts).catch(function(e){
     console.error("WindowManager launch error : ",e);
     this.launcher.finder.find(file).then(function(entry){
       console.error("Was trying to launch : ",file,"with openner :",entry);
