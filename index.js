@@ -72,12 +72,20 @@ WindowManager.prototype.launch = function(file,opts){
 }
 WindowManager.prototype.sanitizeOptions = function(opts){
   var ret = {};
-  var supported = ["env","cwd","shell"];
-  Object.keys(opts).forEach(function(key){
-    if(supported.indexOf(key) !=-1){
-      ret[key] = opts[key];
+  if (opts.env){
+    if(typeof opts.env === 'string'){
+      try{
+        ret.env = JSON.parse(opts.env);
+      }catch(e){
+        console.warn("Parsing environment : ",opts,"Error : ",e);
+      }
+    }else{
+      ret.env = opts.env;
     }
-  })
+  }
+  if(opts.cwd){
+    ret.cwd = opts.cwd;
+  }
   return ret;
 }
 WindowManager.prototype.expose = function(){
