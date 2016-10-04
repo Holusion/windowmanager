@@ -3,7 +3,6 @@ var util = require("util")
   , revert = require("revert-keys")
   , XManager = require('./lib/XManager')
   , Launcher = require("desktop-launch")
-  , MenuInterface = require("./lib/MenuInterface")
   , actions = require("./data/shortcuts.json").records
   , shortcuts = revert(actions);
 
@@ -11,7 +10,6 @@ var util = require("util")
 
 function WindowManager (){
   this.xmaster = new XManager();
-  this.hpanel= new MenuInterface();
   this.launcher = new Launcher();
   this.launcher.on("error",function(e){
     console.error("Launcher Error : ",e);
@@ -24,12 +22,6 @@ function WindowManager (){
   });
 }
 util.inherits(WindowManager,EventEmitter);
-WindowManager.prototype.initDbus = function(callback){
-  callback = callback || function(){};
-  var self = this;
-  this.hpanel.init();
-  this.hpanel.iface.catch(callback).then(function(iface){callback(null)});
-}
 
 WindowManager.prototype.init = function(callback){
   var self = this;
@@ -54,14 +46,12 @@ WindowManager.prototype.init = function(callback){
     }
     self.hasChild = false;
   })
-  this.initDbus(callback);
   return this; //chainable with constructor
 }
 
 WindowManager.prototype.launch = function(file,opts){
   var self = this;
   opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
-  this.hpanel.quit();
   this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
     this.launcher.finder.find(file).then(function(entry){
@@ -92,14 +82,9 @@ WindowManager.prototype.expose = function(){
   this.launcher.killChild();
   this.xmaster.focus();
 }
-WindowManager.prototype.open = function(folder){
-  this.launcher.killChild();
-  this.hpanel.open(folder);
-}
+
 
 WindowManager.prototype.close = function(){
-  console.log("closing menu panel");
-  this.hpanel.quit();
   this.launcher.killChild();
   this.xmaster.exit(); //Closing background window.
 }
