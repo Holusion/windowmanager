@@ -20,6 +20,7 @@ function WindowManager (){
   this.launcher.on("stderr",function(o){
     console.log("player stderr : "+o);
   });
+  this.hasChild = false;
 }
 util.inherits(WindowManager,EventEmitter);
 
@@ -33,18 +34,16 @@ WindowManager.prototype.init = function(callback){
       //console.log("inactive key : "+key);
     }
   })
-  this.hasChild = false;
   this.xmaster.on("expose",function(){
     if(!self.hasChild){
       self.emit("end")
     }
-    self.hasChild = false;
   })
   this.launcher.on("end",function(){
-    if(!self.hasChild){
+    self.hasChild = false;
+    if(self.xmaster.isExposed){
       self.emit("end")
     }
-    self.hasChild = false;
   })
   return this; //chainable with constructor
 }
