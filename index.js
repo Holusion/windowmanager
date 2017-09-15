@@ -53,7 +53,7 @@ WindowManager.prototype.launch = function(file,opts){
   opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
   this.launcher.start(file).catch(function(e){
     console.error("WindowManager launch error : ",e);
-    this.launcher.finder.find(file).then(function(entry){
+    self.launcher.finder.find(file).then(function(entry){
       console.error("Was trying to launch : ",file,"with openner :",entry);
     })
   });
