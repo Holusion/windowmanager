@@ -26,14 +26,13 @@ util.inherits(WindowManager,EventEmitter);
 
 WindowManager.prototype.init = function(callback){
   var self = this;
-  this.xmaster.init();
-  this.xmaster.on("KeyPress",function(key){
+  /*this.xmaster.on("KeyPress",function(key){
     if(shortcuts[key]){
       self.emit("command",shortcuts[key]);
     }else{
       //console.log("inactive key : "+key);
     }
-  })
+  })*/
   this.xmaster.on("expose",function(){
     if(!self.hasChild){
       self.emit("end")
@@ -45,6 +44,7 @@ WindowManager.prototype.init = function(callback){
       self.emit("end")
     }
   })
+	this.xmaster.init(callback);
   return this; //chainable with constructor
 }
 

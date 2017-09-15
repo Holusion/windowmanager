@@ -4,30 +4,15 @@
 var WindowManager = require("./index");
 var manager = new WindowManager();
 var toggled = false;
-var toggle = function(callback){
-  if(toggled){
-    console.log("closing panel");
-    manager.hpanel.quit(callback);
-  }else{
-    console.log("opening panel");
-    manager.hpanel.open(__dirname,callback);//*/
-  }
-  toggled = !toggled;
+
+function launch(){
+	console.log("launching app");
+	manager.launch("/usr/bin/xterm")
 }
+
 manager.init(function(err){
   if(err){
-    return console.log(err);
-  }else if(!err && manager.hpanel){
-
-    process.on("SIGINT",function(){
-      manager.close();
-      process.exit();
-    });
-  }
-}).on("command",function(action){
-  if(action === "menu"){
-    toggle(function(e){
-      if(e) console.log(e)
-    })
+    console.log("init error : ",err);
   }
 });
+setTimeout(launch,4000);
