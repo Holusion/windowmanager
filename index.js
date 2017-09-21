@@ -44,7 +44,7 @@ WindowManager.prototype.init = function(callback){
       self.emit("end")
     }
   })
-	this.xmaster.init(callback);
+	this.xmaster.init(callback); //callback is optionnal in xmaster, so is it here.
   return this; //chainable with constructor
 }
 
