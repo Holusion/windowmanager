@@ -23,3 +23,8 @@ process.stdin.on('data', function (chunk) {
         manager.launch(command,args);
     });
 });
+console.log("init")
+console.log(process.argv[2])
+if(process.argv[2]){
+  manager.launch(process.argv[2],[]);
+}
