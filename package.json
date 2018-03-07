@@ -11,7 +11,7 @@
     "x11": "^2.3.0",
     "xpixmap": "*",
     "revert-keys": "*",
-    "desktop-launch": "^0.6.0",
+    "desktop-launch": "^0.7.0",
     "dbus-native": "^0.2.0"
   },
   "devDependencies": {
