@@ -1,6 +1,6 @@
 {
   "name": "@holusion/windowmanager",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "repository": "http://scm.holusion.net/windowmanager.git",
   "scripts": {
     "start": "node app.js",
