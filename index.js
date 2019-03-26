@@ -8,7 +8,8 @@ var util = require("util")
 
 
 
-function WindowManager (){
+function WindowManager ({force_headless = false}){
+  this.force_headless = force_headless;
   this.xmaster = new XManager();
   this.launcher = new Launcher();
   this.launcher.on("error",function(e){
@@ -44,11 +45,13 @@ WindowManager.prototype.init = function(callback){
       self.emit("end")
     }
   })
-	this.xmaster.init(callback); //callback is optionnal in xmaster, so is it here.
+  if( !this.force_headless){
+    this.xmaster.init(callback); //callback is optionnal in xmaster, so is it here.
+  }
   return this; //chainable with constructor
 }
 
-WindowManager.prototype.launch = function(file,opts){
+WindowManager.prototype.launch = function(file,opts){ // FIXME options are ignored right now?!
   var self = this;
   opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
   this.launcher.start(file).catch(function(e){

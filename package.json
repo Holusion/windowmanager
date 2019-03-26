@@ -3,7 +3,7 @@
   "version": "1.0.9",
   "repository": "http://scm.holusion.net/windowmanager.git",
   "scripts": {
-    "start": "node app.js",
+    "start": "node test_app.js",
     "test": "mocha"
   },
   "main": "index.js",
