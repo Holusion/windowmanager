@@ -8,11 +8,12 @@
   },
   "main": "index.js",
   "dependencies": {
-    "x11": "^2.3.0",
-    "xpixmap": "*",
-    "revert-keys": "*",
+    "dbus-native": "^0.2.0",
     "desktop-launch": "^0.7.0",
-    "dbus-native": "^0.2.0"
+    "keysym": "0.0.6",
+    "revert-keys": "*",
+    "x11": "^2.3.0",
+    "xpixmap": "*"
   },
   "devDependencies": {
     "chai": "^3.2.0",

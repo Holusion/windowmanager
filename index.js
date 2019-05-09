@@ -1,55 +1,70 @@
 var util = require("util")
   , EventEmitter = require('events').EventEmitter
   , revert = require("revert-keys")
-  , XManager = require('./lib/XManager')
+  , {manageXServer} = require('./lib/XManager')
   , Launcher = require("desktop-launch")
-  , actions = require("./data/shortcuts.json").records
-  , shortcuts = revert(actions);
 
-
-
-function WindowManager ({force_headless = false}){
-  this.force_headless = force_headless;
-  this.xmaster = new XManager();
-  this.launcher = new Launcher();
-  this.launcher.on("error",function(e){
-    console.error("Launcher Error : ",e);
-  });
-  this.launcher.on("stdout",function(o){
-    console.log("player stdout : "+o);
-  });
-  this.launcher.on("stderr",function(o){
-    console.log("player stderr : "+o);
-  });
-  this.hasChild = false;
-}
-util.inherits(WindowManager,EventEmitter);
-
-WindowManager.prototype.init = function(callback){
-  var self = this;
-  /*this.xmaster.on("KeyPress",function(key){
-    if(shortcuts[key]){
-      self.emit("command",shortcuts[key]);
-    }else{
-      //console.log("inactive key : "+key);
+async function manageDisplay(opts={}){
+  const m_options = Object.assign({}, opts); //make a copy since we want to modify options
+  if(!m_options.headless){
+    try{
+      m_options.manager = await manageXServer();
+    }catch(e){
+      console.error("Failed to start as Root Window. Falling back to headless mode", e);
     }
-  })*/
-  this.xmaster.on("expose",function(){
-    if(!self.hasChild){
-      self.emit("end")
-    }
-  })
-  this.launcher.on("end",function(){
-    self.hasChild = false;
-    if(self.xmaster.isExposed){
-      self.emit("end")
-    }
-  })
-  if( !this.force_headless){
-    this.xmaster.init(callback); //callback is optionnal in xmaster, so is it here.
   }
-  return this; //chainable with constructor
+  m_options
+  return new WindowManager(m_options);
 }
+
+class WindowManager extends EventEmitter{
+  constructor({manager, shortcuts = []}){
+    super();
+    this.shortcuts = new Map();
+    this.launcher =  new Launcher();
+    this.launcher.on("error",function(e){
+      console.error("Launcher Error : ",e);
+    });
+    this.launcher.on("stdout",function(o){
+      console.log("player stdout : "+o);
+    });
+    this.launcher.on("stderr",function(o){
+      console.log("player stderr : "+o);
+    });
+    this.launcher.on("end",()=>{
+      this.hasChild = false;
+      if(!this.manager || this.manager.isExposed){
+        this.emit("end");
+      }
+    });
+
+    this.hasChild = false;
+    if(manager){
+      this.manager = manager;
+      this.manager.on("expose",()=>{
+        if(!this.hasChild){
+          this.emit("end")
+        }
+      })
+      if(shortcuts){
+        for (const [shortcut, action] of shortcuts){
+          const registered_shortcut = this.manager.registerShortcut(shortcut);
+          this.shortcuts.set(registered_shortcut.uid, action);
+        }
+      }
+      this.manager.on("keydown",(e)=>{
+        const action = this.shortcuts.get(e.uid);
+        if(action){
+          this.emit(action);
+        }
+      })
+    }else{
+      console.log("Running in headless mode");
+    }
+    
+  }
+}
+
 
 WindowManager.prototype.launch = function(file,opts){ // FIXME options are ignored right now?!
   var self = this;
@@ -82,14 +97,14 @@ WindowManager.prototype.sanitizeOptions = function(opts){
 }
 WindowManager.prototype.expose = function(){
   this.launcher.killChild();
-  this.xmaster.focus();
+  if(this.manager) this.manager.focus();
 }
 
 
 WindowManager.prototype.close = function(){
   this.launcher.killChild();
-  this.xmaster.exit(); //Closing background window.
+  if(this.manager) this.manager.exit(); //Closing background window.
 }
 
 
-module.exports = WindowManager;
+module.exports = {manageDisplay, WindowManager};
