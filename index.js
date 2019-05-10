@@ -17,13 +17,17 @@ async function manageDisplay(opts={}){
   return new WindowManager(m_options);
 }
 
+//Do not use directly, prefer its subclass with a determined "type".
+
+
 class WindowManager extends EventEmitter{
   constructor({manager, shortcuts = []}){
     super();
     this.shortcuts = new Map();
     this.launcher =  new Launcher();
-    this.launcher.on("error",function(e){
-      console.error("Launcher Error : ",e);
+    this.launcher.on("error",(e)=>{
+      e.type = "launcher"; //keep original stack trace and add easy type information
+      this.emit("error", e);
     });
     this.launcher.on("stdout",function(o){
       console.log("player stdout : "+o);
@@ -37,7 +41,7 @@ class WindowManager extends EventEmitter{
         this.emit("end");
       }
     });
-
+    this.cancelError = null;
     this.hasChild = false;
     if(manager){
       this.manager = manager;
@@ -46,6 +50,10 @@ class WindowManager extends EventEmitter{
           this.emit("end")
         }
       })
+      this.manager.on("error",(e)=>{
+        e.type = "x11"; //keep original stack trace and add easy type information
+        this.emit("error", e);
+      });
       if(shortcuts){
         for (const [shortcut, action] of shortcuts){
           const registered_shortcut = this.manager.registerShortcut(shortcut);
@@ -65,6 +73,18 @@ class WindowManager extends EventEmitter{
   }
 }
 
+WindowManager.prototype.showError = function(title, text, timeout=5000){
+  if(typeof this.cancelError === "function"){
+    this.cancelError();
+    this.cancelError = null;
+  }
+  if(this.manager){
+    this.manager.drawError(title, text);
+    this.cancelError = setTimeout(()=>{
+      this.manager.unmapError();
+    }, timeout);
+  }
+}
 
 WindowManager.prototype.launch = function(file,opts){ // FIXME options are ignored right now?!
   var self = this;
