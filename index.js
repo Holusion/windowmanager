@@ -13,7 +13,6 @@ async function manageDisplay(opts={}){
       console.error("Failed to start as Root Window. Falling back to headless mode", e);
     }
   }
-  m_options
   return new WindowManager(m_options);
 }
 
@@ -25,6 +24,7 @@ class WindowManager extends EventEmitter{
     super();
     this.shortcuts = new Map();
     this.launcher =  new Launcher();
+    this.hasChild = false;
     this.launcher.on("error",(e)=>{
       e.type = "launcher"; //keep original stack trace and add easy type information
       this.emit("error", e);
@@ -37,16 +37,15 @@ class WindowManager extends EventEmitter{
     });
     this.launcher.on("end",()=>{
       this.hasChild = false;
-      if(!this.manager || this.manager.isExposed){
+      if(!this.active){
         this.emit("end");
       }
     });
     this.cancelError = null;
-    this.hasChild = false;
     if(manager){
       this.manager = manager;
       this.manager.on("expose",()=>{
-        if(!this.hasChild){
+        if(!this.active){
           this.emit("end")
         }
       })
@@ -55,15 +54,14 @@ class WindowManager extends EventEmitter{
         this.emit("error", e);
       });
       if(shortcuts){
-        for (const [shortcut, action] of shortcuts){
-          const registered_shortcut = this.manager.registerShortcut(shortcut);
-          this.shortcuts.set(registered_shortcut.uid, action);
+        for (const [code, action] of shortcuts){
+          this.registerShortcut(code, action);
         }
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
         if(action){
-          this.emit(action);
+          this.emit("command", action);
         }
       })
     }else{
@@ -71,59 +69,77 @@ class WindowManager extends EventEmitter{
     }
     
   }
-}
 
-WindowManager.prototype.showError = function(title, text, timeout=5000){
-  if(typeof this.cancelError === "function"){
-    this.cancelError();
-    this.cancelError = null;
+  registerShortcut(code, action){
+    const registered_shortcut = this.manager.registerShortcut(code);
+          this.shortcuts.set(registered_shortcut.uid, action);
   }
-  if(this.manager){
-    this.manager.drawError(title, text);
-    this.cancelError = setTimeout(()=>{
-      this.manager.unmapError();
-    }, timeout);
-  }
-}
 
-WindowManager.prototype.launch = function(file,opts){ // FIXME options are ignored right now?!
-  var self = this;
-  opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
-  this.launcher.start(file).catch(function(e){
-    console.error("WindowManager launch error : ",e);
-    self.launcher.finder.find(file).then(function(entry){
-      console.error("Was trying to launch : ",file,"with openner :",entry);
-    })
-  });
-  this.hasChild = true;
-}
-WindowManager.prototype.sanitizeOptions = function(opts){
-  var ret = {};
-  if (opts.env){
-    if(typeof opts.env === 'string'){
-      try{
-        ret.env = JSON.parse(opts.env);
-      }catch(e){
-        console.warn("Parsing environment : ",opts,"Error : ",e);
-      }
-    }else{
-      ret.env = opts.env;
+  showError(title, text, timeout=5000){
+    if(typeof this.cancelError === "function"){
+      this.cancelError();
+      this.cancelError = null;
+    }
+    if(this.manager){
+      this.manager.drawError(title, text);
+      this.cancelError = setTimeout(()=>{
+        this.manager.unmapError();
+      }, timeout);
     }
   }
-  if(opts.cwd){
-    ret.cwd = opts.cwd;
+
+  launch (file,opts){ // FIXME options are ignored right now?!
+    var self = this;
+    opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
+    this.launcher.start(file).catch(function(e){
+      console.error("WindowManager launch error : ",e);
+      self.launcher.finder.find(file).then(function(entry){
+        console.error("Was trying to launch : ",file,"with openner :",entry);
+        self.showError("Error", e.message+" on "+file)
+      })
+    });
+    this.hasChild = true;
   }
-  return ret;
-}
-WindowManager.prototype.expose = function(){
-  this.launcher.killChild();
-  if(this.manager) this.manager.focus();
-}
 
+  sanitizeOptions (opts){
+    var ret = {};
+    if (opts.env){
+      if(typeof opts.env === 'string'){
+        try{
+          ret.env = JSON.parse(opts.env);
+        }catch(e){
+          console.warn("Parsing environment : ",opts,"Error : ",e);
+        }
+      }else{
+        ret.env = opts.env;
+      }
+    }
+    if(opts.cwd){
+      ret.cwd = opts.cwd;
+    }
+    return ret;
+  }
 
-WindowManager.prototype.close = function(){
-  this.launcher.killChild();
-  if(this.manager) this.manager.exit(); //Closing background window.
+  get active(){
+    return this.hasChild && (!this.manager || this.manager.isExposed);
+  }
+
+  end (){
+    this.launcher.killChild();
+  }
+
+  // Like this.end() but force shows the background image
+  // No longer required once this.end() will handle focus properly
+  expose (){
+    this.launcher.killChild();
+    if(this.manager) this.manager.focus();
+  }
+
+  //Fully close the window manager
+  close (){
+    this.launcher.killChild();
+    if(this.manager) this.manager.exit(); //Closing background window.
+  }
 }
 
 

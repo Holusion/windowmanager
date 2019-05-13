@@ -1,6 +1,6 @@
 'use strict';
 const x11 = require('x11');
-const {getKeyMaps, getFromName, getFromCode, getModifiers, parseModifiers, parseShortcut, parseEvent} = require("../lib/Xutils/XKeyboard");
+const {getKeyMaps, getFromName, getFromUnicode, getFromCode, getModifiers, parseModifiers, parseShortcut, parseEvent} = require("../lib/Xutils/XKeyboard");
 
 describe("XKeyboard",function(){
   let test_key;
@@ -21,6 +21,16 @@ describe("XKeyboard",function(){
       const code_data = getFromCode(test_key.keycode);
       expect(code_data).to.deep.equal(test_key);
     })
+  })
+  describe("getFromUnicode()", function(){
+    it("Return a char with keycode if available",function(){
+      const space_char = getFromUnicode(0x20);
+      expect(space_char).to.be.an("object");
+      expect(space_char).to.have.property("keycode").a("number");
+
+    })
+  })
+  describe("getFromName()", function() {
     it("Match multiple names",function(){
       //Maybe this test is too locale-dependant? some systems might not have the same two names
       const quote_key_1 = getFromName("apostrophe");
@@ -28,6 +38,14 @@ describe("XKeyboard",function(){
       expect(quote_key_1).to.be.an("object");
       expect(quote_key_2).to.be.an("object");
       expect(quote_key_1).to.deep.equal(quote_key_2);
+    })
+    it("is case insensitive",function(){
+      const space_char = getFromName("space");
+      expect(space_char).to.be.an("object");
+      expect(getFromName("Space")).to.deep.equal(space_char);
+      expect(getFromName("SPACE")).to.deep.equal(space_char);
+      //Also test with one that has a default Uppercased first letter
+      expect(getFromName("up")).to.deep.equal(getFromName("Up"));
     })
   });
   const fixtures = new Map([
