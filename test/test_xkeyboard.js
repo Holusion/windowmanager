@@ -86,6 +86,17 @@ describe("XKeyboard",function(){
     it("Return undefined value when shortcut is invalid",function(){
       expect(parseShortcut("shift+foo")).to.be.undefined;
     })
+    it(`uses case-insensitive values as much as possible`,function(){
+      //Some camel-cased keys are always going to prove difficult to parse
+      const ref = parseShortcut("ctrl+alt+G");
+      expect(ref).to.be.an("object").have.property("names");
+      [
+        "Ctrl+alt+G",
+        "Ctrl+Alt+G"
+      ].forEach(t=>{
+        expect(parseShortcut(t)).to.deep.equal(ref);
+      })
+    });
   })
   describe("parseEvent()",function(){
     const sample_event = Object.freeze({
