@@ -5,8 +5,9 @@ const {getKeyMaps, getFromName, getFromUnicode, getFromCode, getModifiers, parse
 describe("XKeyboard",function(){
   let test_key;
   const test_key_name = "Up";
+  let client;
   before(function(done){
-    x11.createClient(function(err,display) {
+    client = x11.createClient(function(err,display) {
       expect(err).to.be.undefined;
       getKeyMaps(display,function(err){
         test_key = getFromName(test_key_name);
@@ -14,6 +15,9 @@ describe("XKeyboard",function(){
       })
     })
   });
+  after(function(){
+    client.close();
+  })
   //Do NOT test the soundness of the whole keysym -> keycode mapping as it's client-dependant
   describe("getFromCode()",function(){
     it("Match the test key",function(){

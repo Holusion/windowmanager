@@ -2,7 +2,7 @@ var util = require("util")
   , EventEmitter = require('events').EventEmitter
   , revert = require("revert-keys")
   , {manageXServer} = require('./lib/XManager')
-  , Launcher = require("desktop-launch")
+  , {Launcher} = require("desktop-launch")
 
 async function manageDisplay(opts={}){
   const m_options = Object.assign({}, opts); //make a copy since we want to modify options
@@ -137,7 +137,7 @@ class WindowManager extends EventEmitter{
 
   //Fully close the window manager
   close (){
-    this.launcher.killChild();
+    this.launcher.close();
     if(this.manager) this.manager.exit(); //Closing background window.
   }
 }
