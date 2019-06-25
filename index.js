@@ -91,14 +91,15 @@ class WindowManager extends EventEmitter{
   launch (file,opts){ // FIXME options are ignored right now?!
     var self = this;
     opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
-    this.launcher.start(file).catch(function(e){
+    this.hasChild = true;
+    return this.launcher.start(file)
+    .catch(function(e){
       console.error("WindowManager launch error : ",e);
-      self.launcher.finder.find(file).then(function(entry){
+      return self.launcher.finder.find(file).then(function(entry){
         console.error("Was trying to launch : ",file,"with openner :",entry);
         self.showError("Error", e.message+" on "+file)
       })
     });
-    this.hasChild = true;
   }
 
   sanitizeOptions (opts){
