@@ -54,9 +54,12 @@ class WindowManager extends EventEmitter{
         this.emit("error", e);
       });
       if(shortcuts){
+        console.log("register shortcuts")
         for (const [code, action] of shortcuts){
           this.registerShortcut(code, action);
         }
+      }else{
+        console.log("NO SHORTCUTS!")
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
@@ -71,6 +74,7 @@ class WindowManager extends EventEmitter{
   }
 
   registerShortcut(code, action){
+    console.log("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
           this.shortcuts.set(registered_shortcut.uid, action);
   }
