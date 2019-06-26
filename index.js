@@ -36,6 +36,7 @@ class WindowManager extends EventEmitter{
       console.log("player stderr : "+o);
     });
     this.launcher.on("end",()=>{
+      console.log("Launcher End Event");
       this.hasChild = false;
       if(!this.active){
         this.emit("end");
@@ -45,6 +46,8 @@ class WindowManager extends EventEmitter{
     if(manager){
       this.manager = manager;
       this.manager.on("expose",()=>{
+        console.log("EXPOSE EVENT")
+        this.wait();
         if(!this.active){
           this.emit("end")
         }
@@ -67,12 +70,25 @@ class WindowManager extends EventEmitter{
           this.emit("command", action);
         }
       })
+      //handle waiting state set / cancel
     }else{
       console.log("Running in headless mode");
     }
     
   }
-
+  wait(){
+    console.log("wait timer");
+    //this.cancelWait(); //Should not happend according to state machine
+    this._wait_timeout = setTimeout(()=>{
+      console.log("wait timer end. State : ", this.active);
+      if(this.manager.isExposed){
+        this.manager.focus();
+      }
+    }, 2000);
+  }
+  cancelWait(){
+    clearTimeout(this._wait_timeout);
+  }
   registerShortcut(code, action){
     console.log("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
@@ -94,6 +110,7 @@ class WindowManager extends EventEmitter{
 
   launch (file,opts){ // FIXME options are ignored right now?!
     var self = this;
+    this.cancelWait();
     opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
     this.hasChild = true;
     return this.launcher.start(file)
@@ -131,6 +148,7 @@ class WindowManager extends EventEmitter{
 
   end (){
     this.launcher.killChild();
+    this.hasChild = false;
   }
 
   // Like this.end() but force shows the background image
@@ -142,8 +160,12 @@ class WindowManager extends EventEmitter{
 
   //Fully close the window manager
   close (){
+    this.cancelWait();
     this.launcher.close();
-    if(this.manager) this.manager.exit(); //Closing background window.
+    if(this.manager) {
+      this.manager.exit();
+      //this.removeListener("end", this._on_end_listener);
+    } //Closing background window.
   }
 }
 
