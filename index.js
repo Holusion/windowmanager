@@ -2,7 +2,7 @@ var util = require("util")
   , EventEmitter = require('events').EventEmitter
   , revert = require("revert-keys")
   , {manageXServer} = require('./lib/XManager')
-  , {Launcher} = require("desktop-launch")
+  , {Launcher} = require("./lib/Launcher")
 
 async function manageDisplay(opts={}){
   const m_options = Object.assign({}, opts); //make a copy since we want to modify options
@@ -108,12 +108,11 @@ class WindowManager extends EventEmitter{
     }
   }
 
-  launch (file,opts){ // FIXME options are ignored right now?!
+  launch (file,opts={}){ // FIXME options are ignored right now?!
     var self = this;
     this.cancelWait();
-    opts = (typeof opts === "object")?this.sanitizeOptions(opts):{};
     this.hasChild = true;
-    return this.launcher.start(file)
+    return this.launcher.start(file, opts)
     .catch(function(e){
       console.error("WindowManager launch error : ",e);
       return self.launcher.finder.find(file).then(function(entry){
@@ -121,25 +120,6 @@ class WindowManager extends EventEmitter{
         self.showError("Error", e.message+" on "+file)
       })
     });
-  }
-
-  sanitizeOptions (opts){
-    var ret = {};
-    if (opts.env){
-      if(typeof opts.env === 'string'){
-        try{
-          ret.env = JSON.parse(opts.env);
-        }catch(e){
-          console.warn("Parsing environment : ",opts,"Error : ",e);
-        }
-      }else{
-        ret.env = opts.env;
-      }
-    }
-    if(opts.cwd){
-      ret.cwd = opts.cwd;
-    }
-    return ret;
   }
 
   get active(){
