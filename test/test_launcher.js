@@ -71,6 +71,20 @@ describe("Launcher",function(){
       }
       launcher.start("bar:///path/to/file")
     });
+    it("Uses dirname as default cwd",function(done){
+      launcher.start("/bin/pwd");
+      launcher.on("stdout",function(d){
+        expect(d.toString()).to.equal("/bin\n");
+        done();
+      })
+    })
+    it("accepts custom working directory",function(done){
+      launcher.start("/bin/pwd", {cwd:__dirname});
+      launcher.on("stdout",function(d){
+        expect(d.toString()).to.equal(__dirname+"\n");
+        done();
+      })
+    })
   })
 
   describe("exec()",function(){
