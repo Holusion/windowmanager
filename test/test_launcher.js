@@ -85,6 +85,14 @@ describe("Launcher",function(){
         done();
       })
     })
+    it("emit an error if file doesn't exist",function(done){
+      launcher.on("error", function(err){
+        expect(err).to.be.instanceof(Error);
+        expect(err).to.have.property("code", "ENOENT");
+        done();
+      })
+      launcher.start("/path/to/foo.bin")
+    })
   })
 
   describe("exec()",function(){
@@ -135,6 +143,7 @@ describe("Launcher",function(){
         launcher.exec("/path/to something.txt","foo %f");
       });
     });
+
     describe("Spawn and kill childs",function(){
       let launcher;
       beforeEach(function(){
@@ -152,6 +161,23 @@ describe("Launcher",function(){
         let child = launcher.exec(path.resolve(__dirname,"fixtures/stubFile.sh"));
         expect(child).to.be.not.null;
       });
+
+      it("emit an error if file doesn't exist", function(done){
+        launcher.on("error",function(err){
+          expect(err).to.have.property("code", "ENOENT");
+          done();
+        })
+        const child = launcher.exec("/path/to/foo.bin");
+      })
+      
+      it("throw an error if file can't be executed", function(done){
+        launcher.on("error",function(err){
+          expect(err).to.have.property("code", "EACCES");
+          done();
+        })
+        launcher.exec(path.resolve(__dirname,"fixtures/applications/bar.desktop"));
+      })
+
       it("Emit end on child exit",function(done){
         launcher.on("end",function(){
           done();

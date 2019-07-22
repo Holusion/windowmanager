@@ -57,7 +57,7 @@ class WindowManager extends EventEmitter{
         this.emit("error", e);
       });
       if(shortcuts){
-        console.log("register shortcuts")
+        console.log("Shortcuts : ", shortcuts);
         for (const [code, action] of shortcuts){
           this.registerShortcut(code, action);
         }
@@ -89,12 +89,26 @@ class WindowManager extends EventEmitter{
   cancelWait(){
     clearTimeout(this._wait_timeout);
   }
+
+  updateShortcuts(sh){
+    const new_shortcuts = new Map(sh);
+    for(const [code, action] of this.shortcuts){
+      if(new_shortcuts.has(code)){
+        this.unregisterShortcut(code);
+      }
+    }
+    for (const [code, action] of new_shortcuts){
+      if(!this.shortcuts.has(code))
+      this.registerShortcut(code, action);
+    }
+    this.shortcuts = new_shortcuts;
+  }
+
   registerShortcut(code, action){
     console.log("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
           this.shortcuts.set(registered_shortcut.uid, action);
   }
-
   showError(title, text, timeout=5000){
     if(typeof this.cancelError === "function"){
       this.cancelError();
