@@ -3,7 +3,7 @@ var util = require("util")
   , revert = require("revert-keys")
   , {manageXServer} = require('./lib/XManager')
   , {Launcher} = require("./lib/Launcher")
-
+  , {parseShortcut} = require("./lib/Xutils/XKeyboard")
 async function manageDisplay(opts={}){
   const m_options = Object.assign({}, opts); //make a copy since we want to modify options
   if(!m_options.headless){
@@ -57,15 +57,11 @@ class WindowManager extends EventEmitter{
         this.emit("error", e);
       });
       if(shortcuts){
-        console.log("Shortcuts : ", shortcuts);
-        for (const [code, action] of shortcuts){
-          this.registerShortcut(code, action);
-        }
-      }else{
-        console.log("NO SHORTCUTS!")
+        this.updateShortcuts(shortcuts);
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
+        //console.log("keydown :", e, action);
         if(action){
           this.emit("command", action);
         }
@@ -92,22 +88,29 @@ class WindowManager extends EventEmitter{
 
   updateShortcuts(sh){
     const new_shortcuts = new Map(sh);
-    for(const [code, action] of this.shortcuts){
+    for(const [code] of this.shortcuts){
       if(new_shortcuts.has(code)){
-        this.unregisterShortcut(code);
+        this.manager.unregisterShortcut(code);
       }
     }
     for (const [code, action] of new_shortcuts){
       if(!this.shortcuts.has(code))
       this.registerShortcut(code, action);
     }
-    this.shortcuts = new_shortcuts;
+    this.shortcuts = new Map(sh.map(([keys, action])=>{
+      const code = parseShortcut(keys).uid;
+      return [code, action];
+    }))
   }
 
   registerShortcut(code, action){
     console.log("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
           this.shortcuts.set(registered_shortcut.uid, action);
+  }
+  sendKeys(keys){
+    if(this.manager) return this.manager.sendKeys(keys);
+    return Promise.resolve();
   }
   showError(title, text, timeout=5000){
     if(typeof this.cancelError === "function"){

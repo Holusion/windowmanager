@@ -74,6 +74,11 @@ describe("XKeyboard",function(){
         expect(mods).to.have.property("modifiers",key& ~2 & ~16 & ~128); //ignore lock keys
       })
     }
+    it("`refuses non-string arguments",function(){
+      expect(_=>{parseShortcut({})}).to.throw(Error);
+      expect(_=>{parseShortcut()}).to.throw(Error);
+      expect(_=>{parseShortcut(null)}).to.throw(Error);
+    })
     it(`Accept random-order modifiers`,function(){
       const mods1 = parseShortcut("ctrl+alt+shift+Up");
       const mods2 = parseShortcut("ctrl+shift+alt+Up");
