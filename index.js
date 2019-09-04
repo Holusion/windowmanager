@@ -57,7 +57,11 @@ class WindowManager extends EventEmitter{
         this.emit("error", e);
       });
       if(shortcuts){
-        this.updateShortcuts(shortcuts);
+        try{
+          this.updateShortcuts(shortcuts);
+        }catch(e){
+          console.error("Failed to update shortcuts : ",e);
+        }
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
