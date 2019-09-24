@@ -135,11 +135,7 @@ class WindowManager extends EventEmitter{
     this.hasChild = true;
     return this.launcher.start(file, opts)
     .catch(function(e){
-      console.error("WindowManager launch error : ",e);
-      return self.launcher.finder.find(file).then(function(entry){
-        console.error("Was trying to launch : ",file,"with openner :",entry);
-        self.showError("Error", e.message+" on "+file)
-      })
+      console.error(`WindowManager launch error for file ${file} : `, e);
     });
   }
 
