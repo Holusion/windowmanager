@@ -1,7 +1,7 @@
 'use strict';
 const path = require("path");
 
-const {Launcher} = require("../lib/Launcher");
+const {Launcher, ErrNotFound} = require("../lib/Launcher");
 const ExecMock = require("./ExecMock");
 
 const delay = (d) => new Promise((r)=> setTimeout(r,d));
@@ -16,7 +16,25 @@ describe("Launcher",function(){
     afterEach(function(){
       launcher.close();
     })
-
+    it("Throw an explicit error if file is null",function(){
+      launcher.exec = function(file, line, opts){
+        expect.fail("Exec should not be called");
+      }
+      return launcher.start(null)
+      .catch((e)=>{
+        expect(e).to.be.instanceof(ErrNotFound);
+      })
+    });
+    it("Throw an explicit error if file is not found",function(){
+      launcher.exec = function(file, line, opts){
+        throw new Error("ENOTFOUND");
+      }
+      return launcher.start("/path/to/bin")
+      .catch((e)=>{
+        expect(e).to.be.instanceof(Error);
+        expect(e.message).to.match(/\/path\/to\/bin.*NOTFOUND/);
+      })
+    });
     it("open with desktop handler",function(done){
       launcher.exec = function(file, line, opts){
         expect(file).to.equal("/path/to/file.txt");
