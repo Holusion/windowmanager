@@ -10,7 +10,7 @@
   "dependencies": {
     "abstract-socket": "^2.0.0",
     "shell-quote": "^1.6.1",
-    "xdg-apps": "^1.0.4",
+    "xdg-apps": "^1.0.6",
     "dbus-native": "^0.4.0",
     "freetype2": "^0.3.1",
     "keysym": "0.0.6",
