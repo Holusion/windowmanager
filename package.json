@@ -12,15 +12,14 @@
   },
   "dependencies": {
     "abstract-socket": "^2.1.1",
-    "shell-quote": "^1.6.1",
-    "xdg-apps": "^1.0.6",
     "dbus-native": "^0.4.0",
-    "freetype2": "^0.3.1",
+    "ntk": "*",
     "keysym": "0.0.6",
-    "ntk": "^2.2.0",
     "revert-keys": "*",
+    "shell-quote": "^1.6.1",
     "x11": "^2.3.0",
-    "xpixmap": "*"
+    "xdg-apps": "^1.0.6",
+    "xpixmap": "^0.0.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
