@@ -21,7 +21,7 @@ describe("XKeyboard",function(){
   //Do NOT test the soundness of the whole keysym -> keycode mapping as it's client-dependant
   describe("getFromCode()",function(){
     it("Match the test key",function(){
-      expect(test_key.keycode).to.be.a.number;
+      expect(test_key.keycode).to.be.a("number");
       const code_data = getFromCode(test_key.keycode);
       expect(code_data).to.deep.equal(test_key);
     })

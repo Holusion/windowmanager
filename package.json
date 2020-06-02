@@ -7,8 +7,11 @@
     "test": "mocha"
   },
   "main": "index.js",
+  "engines": {
+    "node": ">=10"
+  },
   "dependencies": {
-    "abstract-socket": "^2.0.0",
+    "abstract-socket": "^2.1.1",
     "shell-quote": "^1.6.1",
     "xdg-apps": "^1.0.6",
     "dbus-native": "^0.4.0",
@@ -20,8 +23,8 @@
     "xpixmap": "*"
   },
   "devDependencies": {
-    "chai": "^3.2.0",
+    "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "mocha": "^6.1.4"
+    "mocha": "^7.2.0"
   }
 }
