@@ -20,7 +20,7 @@ async function manageDisplay(opts={}){
 
 
 class WindowManager extends EventEmitter{
-  constructor({manager, shortcuts = []}){
+  constructor({manager, shortcuts = []}={}){
     super();
     this.shortcuts = new Map();
     this.launcher =  new Launcher();
@@ -123,9 +123,10 @@ class WindowManager extends EventEmitter{
     }
     if(this.manager){
       this.manager.drawError(title, text);
-      this.cancelError = setTimeout(()=>{
+      let t = setTimeout(()=>{
         this.manager.unmapError();
       }, timeout);
+      this.cancelError = ()=> clearTimeout(t);
     }
   }
 
