@@ -15,7 +15,6 @@
     "canvas": "^2.6.1",
     "dbus-native": "^0.4.0",
     "keysym": "0.0.6",
-    "ntk": "*",
     "revert-keys": "*",
     "shell-quote": "^1.6.1",
     "x11": "^2.3.0",
