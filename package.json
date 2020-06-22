@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "abstract-socket": "^2.1.1",
-    "canvas": "^2.6.1",
     "dbus-native": "^0.4.0",
     "freetype-draw": "^1.0.0",
     "keysym": "0.0.6",
