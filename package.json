@@ -18,7 +18,7 @@
     "revert-keys": "*",
     "shell-quote": "^1.6.1",
     "x11": "^2.3.0",
-    "xdg-apps": "^1.0.6",
+    "xdg-apps": "^1.1.0",
     "xpixmap": "^0.0.3"
   },
   "devDependencies": {
