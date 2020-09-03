@@ -8,7 +8,7 @@ async function manageDisplay(opts={}){
   const m_options = Object.assign({}, opts); //make a copy since we want to modify options
   if(!m_options.headless){
     try{
-      m_options.manager = await manageXServer();
+      m_options.manager = await manageXServer(opts);
     }catch(e){
       console.error("Failed to start as Root Window. Falling back to headless mode", e);
     }
@@ -16,7 +16,6 @@ async function manageDisplay(opts={}){
   return new WindowManager(m_options);
 }
 
-//Do not use directly, prefer its subclass with a determined "type".
 
 
 class WindowManager extends EventEmitter{
