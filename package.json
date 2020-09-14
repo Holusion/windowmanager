@@ -4,7 +4,7 @@
   "repository": "http://scm.holusion.net/windowmanager.git",
   "scripts": {
     "start": "node test_app.js",
-    "test": "mocha"
+    "test": "mocha --require ./test/common.js --ui bdd --recursive --colors -R spec --check-leaks"
   },
   "main": "index.js",
   "engines": {
