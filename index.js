@@ -116,26 +116,51 @@ class WindowManager extends EventEmitter{
     return Promise.resolve();
   }
   showError(title, text, timeout=5000){
+    if(!this.manager){
+      return;
+    }
     if(typeof this.cancelError === "function"){
       this.cancelError();
       this.cancelError = null;
     }
-    if(this.manager){
-      this.manager.drawError(title, text);
-      let t = setTimeout(()=>{
-        this.manager.unmapError();
-      }, timeout);
-      this.cancelError = ()=> clearTimeout(t);
-    }
+    this.manager.drawError(title, text);
+    let t = setTimeout(()=>{
+      this.manager.unmapError();
+    }, timeout);
+    this.cancelError = ()=> clearTimeout(t);
   }
-
-  launch (file,opts={}){ // FIXME options are ignored right now?!
-    var self = this;
+  wrapChildError(source, orig){
+    let e = new Error(orig.message);
+    e.code = orig.code || "UNKNOWN";
+    this.showError(
+      `${source} : ${e.code}`,
+      `${e.message}`
+    );
+    this.emit("error",e);
+  }
+  /**
+   * 
+   * @param {string} file File we wish to start from a launcher defined in desktop entries or as an executable as last resort
+   * @param {object} opts Options to pass as third argument to [spawn](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options) 
+   */
+  launch (file, opts={}){ // FIXME options are ignored right now?!
     this.cancelWait();
     this.hasChild = true;
     return this.launcher.start(file, opts)
-    .catch(function(e){
-      console.error(`WindowManager launch error for file ${file} : `, e);
+    .catch((e)=>{
+      this.wrapChildError(file, e);
+    });
+  }
+  /**
+   * Direct-spawn a file, bypassing xdg-apps search for a launcher
+   * @param {string} command - 
+   */
+  spawn(command, args, options){
+    this.cancelWait();
+    this.hasChild = true;
+    this.launcher.spawn(command, args, options)
+    .catch((e)=>{
+      this.wrapChildError(command, e);
     });
   }
 
