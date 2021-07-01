@@ -1,23 +1,40 @@
-var util = require("util")
-  , EventEmitter = require('events').EventEmitter
-  , revert = require("revert-keys")
-  , {parse:parseArgs} = require("shell-quote")
-  , {manageXServer} = require('./lib/XManager')
-  , {Launcher} = require("./lib/Launcher")
-  , {parseShortcut} = require("./lib/Xutils/XKeyboard")
+'use strict';
+const EventEmitter = require('events').EventEmitter
+const {parse:parseArgs} = require("shell-quote")
+const {manageXServer} = require('./lib/XManager')
+const {Launcher} = require("./lib/Launcher")
+const {parseShortcut} = require("./lib/Xutils/XKeyboard")
+
+const {logger} = require("@holusion/logger");
+
+class WrapError extends Error{
+  constructor(source, message){
+    super(message || source.message);
+    this.source = source;
+  }
+}
+
+class XError extends WrapError{
+  get type(){ return "x11"}
+}
+
+class LauncherError extends WrapError{
+  get type(){ return "launcher"}
+}
+
 async function manageDisplay(opts={}){
   const m_options = Object.assign({}, opts); //make a copy since we want to modify options
+  let error;
   if(!m_options.headless){
     try{
       m_options.manager = await manageXServer(opts);
     }catch(e){
-      console.error("Failed to start as Root Window. Falling back to headless mode", e);
+      logger.error(new XError(e, "Failed to start as Root Window. Falling back to headless mode"));
     }
   }
-  return new WindowManager(m_options);
+  let m = new WindowManager(m_options);
+  return m;
 }
-
-
 
 class WindowManager extends EventEmitter{
   constructor({manager, shortcuts = []}={}){
@@ -25,18 +42,26 @@ class WindowManager extends EventEmitter{
     this.shortcuts = new Map();
     this.launcher =  new Launcher();
     this.hasChild = false;
+
     this.launcher.on("error",(e)=>{
-      e.type = "launcher"; //keep original stack trace and add easy type information
-      this.emit("error", e);
+      this.emit("error", new LauncherError(e));
     });
-    this.launcher.on("stdout",function(o){
-      console.log("player stdout : "+o);
+
+    this.launcher.on("stdout",(o)=>{
+      if(this.listenerCount("stdout") == 0){
+        logger.log("player stdout : "+o);
+      }else{
+        this.emit("stdout", o);
+      }
     });
     this.launcher.on("stderr",function(o){
-      console.log("player stderr : "+o);
+      if(this.listenerCount("stderr") == 0){
+        logger.log("player stderr : "+o);
+      }else{
+        this.emit("stderr", o);
+      }
     });
     this.launcher.on("end",()=>{
-      console.log("Launcher End Event");
       this.hasChild = false;
       if(!this.active){
         this.emit("end");
@@ -46,41 +71,40 @@ class WindowManager extends EventEmitter{
     if(manager){
       this.manager = manager;
       this.manager.on("expose",()=>{
-        console.log("EXPOSE EVENT")
         this.wait();
         if(!this.active){
           this.emit("end")
         }
       })
-      this.manager.on("error",(e)=>{
-        e.type = "x11"; //keep original stack trace and add easy type information
-        this.emit("error", e);
+      this.manager.on("error", (e)=>{
+        this.emit("error", new XError(e));
       });
+
       if(shortcuts){
         try{
           this.updateShortcuts(shortcuts);
         }catch(e){
-          console.error("Failed to update shortcuts : ",e);
+          this.emit("error", new XError("Failed to update shortcuts", e));
         }
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
-        //console.log("keydown :", e, action);
+        //logger.log("keydown :", e, action);
         if(action){
           this.emit("command", action);
         }
       })
       //handle waiting state set / cancel
     }else{
-      console.log("Running in headless mode");
+      this.emit("log", "Running in headless mode");
     }
-    
+
   }
 
   wait(){
     //this.cancelWait(); //Should not happend according to state machine
     this._wait_timeout = setTimeout(()=>{
-      console.log("wait timer end. State : ", this.active);
+      logger.debug("wait timer end. State : ", this.active);
       if(this.manager.isExposed){
         this.manager.focus();
       }
@@ -112,7 +136,7 @@ class WindowManager extends EventEmitter{
   }
 
   registerShortcut(code, action){
-    console.log("Register %s as shortcut for %s", code, action);
+    logger.log("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
           this.shortcuts.set(registered_shortcut.uid, action);
   }

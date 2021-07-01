@@ -1,15 +1,14 @@
 FROM node:10-buster-slim
 #  add libraries needed to build
 ENV DEBIAN_FRONTEND noninteractive 
-RUN apt-get update -qqy
 
-RUN apt-get -qqy --no-install-recommends install \
+RUN apt-get update -qqy &&apt-get -qqy --no-install-recommends install \
     ca-certificates \
 	fontconfig \
     build-essential \
     python
 
-RUN apt-get -qqy --no-install-recommends install \
+RUN apt-get update -qqy && apt-get -qqy --no-install-recommends install \
     xauth \
     xvfb
 
