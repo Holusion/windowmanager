@@ -49,16 +49,16 @@ class WindowManager extends EventEmitter{
 
     this.launcher.on("stdout",(o)=>{
       if(this.listenerCount("stdout") == 0){
-        logger.log("player stdout : "+o);
+        logger.log("player stdout : "+o.toString("utf8"));
       }else{
-        this.emit("stdout", o);
+        this.emit("stdout", o.toString("utf8"));
       }
     });
     this.launcher.on("stderr",(o)=>{
       if(this.listenerCount("stderr") == 0){
-        logger.log("player stderr : "+o);
+        logger.log("player stderr : "+o.toString("utf8"));
       }else{
-        this.emit("stderr", o);
+        this.emit("stderr", o.toString("utf8"));
       }
     });
     this.launcher.on("end",()=>{

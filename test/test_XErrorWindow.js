@@ -16,7 +16,9 @@ describe("XErrorWindow", ()=>{
       );
       done(err);
     });
-    client.on("error", (e)=>expect.fail(e));
+    //A race condition here that can not be traced
+    //causes some test to fail randomly with ERR_STREAM_WRITE_AFTER_END
+    client.on("error", (e)=> expect.fail(e));
   })
   after((done)=>{
     X.DestroyWindow(wid);
