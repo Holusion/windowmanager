@@ -54,7 +54,7 @@ class WindowManager extends EventEmitter{
         this.emit("stdout", o);
       }
     });
-    this.launcher.on("stderr",function(o){
+    this.launcher.on("stderr",(o)=>{
       if(this.listenerCount("stderr") == 0){
         logger.log("player stderr : "+o);
       }else{
