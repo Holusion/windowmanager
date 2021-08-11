@@ -119,6 +119,7 @@ describe("Launcher",function(){
       let launcher;
       beforeEach(function(){
         launcher = new Launcher();
+        // @ts-ignore
         launcher._spawn = function(a,b,c){
           return new ExecMock([a,b,c]);
         }

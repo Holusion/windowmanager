@@ -1,11 +1,15 @@
 'use strict';
 const EventEmitter = require("events").EventEmitter;
 
+class FakeStream extends EventEmitter{
+  setEncoding(){}
+}
+
 class ExecMock extends EventEmitter{
   constructor(args){
     super();
-    this.stdout = new EventEmitter();
-    this.stderr = new EventEmitter();
+    this.stdout = new FakeStream();
+    this.stderr = new FakeStream();
     process.nextTick(()=>{
       this.stdout.emit("data","hello");
       this.stderr.emit("data","world");

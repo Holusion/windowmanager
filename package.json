@@ -11,7 +11,7 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@holusion/logger": "^1.0.0",
+    "@holusion/logger": "^1.1.0",
     "abstract-socket": "^2.1.1",
     "dbus-native": "^0.4.0",
     "freetype-draw": "^1.2.2",

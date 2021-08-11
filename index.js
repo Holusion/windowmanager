@@ -5,7 +5,7 @@ const {manageXServer} = require('./lib/XManager')
 const {Launcher} = require("./lib/Launcher")
 const {parseShortcut} = require("./lib/Xutils/XKeyboard")
 
-const {logger} = require("@holusion/logger");
+const Logger = require("@holusion/logger");
 
 class WrapError extends Error{
   constructor(source, message){
@@ -22,25 +22,66 @@ class LauncherError extends WrapError{
   get type(){ return "launcher"}
 }
 
+
+/**
+ * @typedef WindowManagerOptions
+ * @type {object}
+ * @property {boolean} [headless=false]
+ * @property {Logger} [logger=Logger.logger]
+ * @property {import("./lib/XManager").XManager} [manager]
+ * @property {Array<[string,string]>} [shortcuts]
+ */
+
+/**
+ * 
+ * @param {WindowManagerOptions} [opts] 
+ * @returns {Promise<WindowManager>}
+ */
 async function manageDisplay(opts={}){
-  const m_options = Object.assign({}, opts); //make a copy since we want to modify options
-  let error;
-  if(!m_options.headless){
+  let manager;
+  if(!opts.headless){
     try{
-      m_options.manager = await manageXServer(opts);
+      manager = await manageXServer(opts);
     }catch(e){
-      logger.error(new XError(e, "Failed to start as Root Window. Falling back to headless mode"));
+      (opts.logger || Logger.logger).error(new XError(e, "Failed to start as Root Window. Falling back to headless mode"));
     }
   }
-  let m = new WindowManager(m_options);
+  let m = new WindowManager({...opts, manager});
   return m;
 }
 
+
+
+/** Error from X server management or from Launcher
+ * @event WindowManager#error
+ * @type {LauncherError|XError}
+ */
+/** Launched child stdout event
+ * @event WindowManager#stdout
+ * @type {string}
+ */
+/** Launched child stderr event
+ * @event WindowManager#stderr
+ * @type {string}
+ */
+/** Child process has ended
+ * @event WindowManager#end
+ * @type {undefined}
+ */
+/** A command has been issued through the shortcuts interface
+ * @event WindowManager#command
+ * @type {string}
+ */
 class WindowManager extends EventEmitter{
-  constructor({manager, shortcuts = []}={}){
+  /**
+   * 
+   * @param {WindowManagerOptions} [param0]
+   */
+  constructor({manager, shortcuts = [], logger = Logger.logger}={}){
     super();
+    this.logger = logger;
     this.shortcuts = new Map();
-    this.launcher =  new Launcher();
+    this.launcher =  new Launcher({logger});
     this.hasChild = false;
 
     this.launcher.on("error",(e)=>{
@@ -49,16 +90,16 @@ class WindowManager extends EventEmitter{
 
     this.launcher.on("stdout",(o)=>{
       if(this.listenerCount("stdout") == 0){
-        logger.log("player stdout : "+o.toString("utf8"));
+        this.logger.log("player stdout : "+o);
       }else{
-        this.emit("stdout", o.toString("utf8"));
+        this.emit("stdout", o);
       }
     });
     this.launcher.on("stderr",(o)=>{
       if(this.listenerCount("stderr") == 0){
-        logger.log("player stderr : "+o.toString("utf8"));
+        this.logger.log("player stderr : "+o);
       }else{
-        this.emit("stderr", o.toString("utf8"));
+        this.emit("stderr", o);
       }
     });
     this.launcher.on("end",()=>{
@@ -93,18 +134,17 @@ class WindowManager extends EventEmitter{
         if(action){
           this.emit("command", action);
         }
-      })
+      });
       //handle waiting state set / cancel
     }else{
-      this.emit("log", "Running in headless mode");
+      this.logger.info("Running in headless mode");
     }
-
   }
 
   wait(){
     //this.cancelWait(); //Should not happend according to state machine
     this._wait_timeout = setTimeout(()=>{
-      logger.debug("wait timer end. State : ", this.active);
+      this.logger.debug("wait timer end. State : ", this.active);
       if(this.manager.isExposed){
         this.manager.focus();
       }
@@ -116,7 +156,7 @@ class WindowManager extends EventEmitter{
   }
   /**
    * Uses a Map or a map-like array to override keyboard shortcuts
-   * @param {Array|Map} sh - new shortcuts to replace the previous set 
+   * @param {Array<[string,string]>} sh - new shortcuts to replace the previous set 
    */
   updateShortcuts(sh){
     const new_shortcuts = new Map(sh);
@@ -136,7 +176,7 @@ class WindowManager extends EventEmitter{
   }
 
   registerShortcut(code, action){
-    logger.log("Register %s as shortcut for %s", code, action);
+    this.logger.log("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
           this.shortcuts.set(registered_shortcut.uid, action);
   }
@@ -181,8 +221,10 @@ class WindowManager extends EventEmitter{
    */
   wrapChildError(source, orig){
     let e = new Error(orig.message);
+    // @ts-ignore
     e.code = orig.code || "UNKNOWN";
     this.showError(
+      // @ts-ignore
       `${source} : ${e.code}`,
       `${e.message}`
     );
@@ -193,7 +235,10 @@ class WindowManager extends EventEmitter{
    * Launch a file using Desktop entries if possible
    * @param {string} file File we wish to start from a launcher defined in desktop entries or as an executable as last resort
    * @param {object} opts Options to pass as third argument to [spawn](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options) 
-   */
+   * @emits WindowManager#error
+   * @emits WindowManager#stdout
+   * @emits WindowManager#stderr
+  */
   launch (file, opts={}){ // FIXME options are ignored right now?!
     this.cancelWait();
     this.hasChild = true;
