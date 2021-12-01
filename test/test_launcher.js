@@ -90,9 +90,9 @@ describe("Launcher",function(){
       launcher.start("bar:///path/to/file")
     });
     it("Uses dirname as default cwd",function(done){
-      launcher.start("/bin/pwd");
+      launcher.start("/usr/bin/pwd");
       launcher.on("stdout",function(d){
-        expect(d.toString()).to.equal("/bin\n");
+        expect(d.toString()).to.equal("/usr/bin\n");
         done();
       })
     })
