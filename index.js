@@ -120,7 +120,6 @@ class WindowManager extends EventEmitter{
       this.manager.on("error", (e)=>{
         this.emit("error", new XError(e));
       });
-
       if(shortcuts){
         try{
           this.updateShortcuts(shortcuts);
@@ -130,7 +129,7 @@ class WindowManager extends EventEmitter{
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
-        //logger.log("keydown :", e, action);
+        logger.debug("Intercepted key press :", e.names[0] || e.keycode);
         if(action){
           this.emit("command", action);
         }
@@ -138,6 +137,7 @@ class WindowManager extends EventEmitter{
       //handle waiting state set / cancel
     }else{
       this.logger.info("Running in headless mode");
+      if(shortcuts && 0 < shortcuts.length) this.logger.debug("Shortcuts will not work properly");
     }
   }
 
@@ -176,7 +176,7 @@ class WindowManager extends EventEmitter{
   }
 
   registerShortcut(code, action){
-    this.logger.log("Register %s as shortcut for %s", code, action);
+    this.logger.info("Register %s as shortcut for %s", code, action);
     const registered_shortcut = this.manager.registerShortcut(code);
           this.shortcuts.set(registered_shortcut.uid, action);
   }
