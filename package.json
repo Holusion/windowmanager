@@ -16,7 +16,7 @@
     "dbus-native": "^0.4.0",
     "freetype-draw": "^1.2.2",
     "keysym": "0.0.6",
-    "shell-quote": "^1.6.1",
+    "shell-quote": "^1.7.3",
     "x11": "^2.3.0",
     "x11-prop": "^0.4.3",
     "xdg-apps": "^1.1.0",

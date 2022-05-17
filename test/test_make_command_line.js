@@ -52,4 +52,18 @@ describe("makeCommandLine",function(){
       expect(make(`file_with".txt`, "foo %f %U %u")).to.deep.equal({exec:"foo",params: [`file_with".txt`]})
     })
   })
+  describe("takes additional arguments", function(){
+    it("adds an argument", function(){
+      expect(make("foo","echo %f", "--bar")).to.deep.equal({exec:"echo",params: ["foo", "--bar"]});
+    });
+    it("adds multiple arguments", function(){
+      expect(make("foo","echo %f", "--bar --baz")).to.deep.equal({exec:"echo",params: ["foo", "--bar", "--baz"]});
+    });
+    it("escapes arguments", function(){
+      expect(make("foo","echo %f", `--bar "hello world"`)).to.deep.equal({exec:"echo",params: ["foo", "--bar", "hello world"]});
+    });
+    it("removes special operators", function(){
+      expect(make("foo","echo %f", `> /dev/null`)).to.deep.equal({exec:"echo",params: ["foo", "/dev/null"]});
+    });
+  })
 });
