@@ -260,9 +260,6 @@ class WindowManager extends EventEmitter{
     this.cancelWait();
     this.hasChild = true;
     this.launcher.spawn(command, args, options)
-    .catch((e)=>{
-      this.wrapChildError(command, e);
-    });
   }
 
   get active(){
