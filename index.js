@@ -1,9 +1,8 @@
 'use strict';
 const EventEmitter = require('events').EventEmitter
 const {parse:parseArgs} = require("shell-quote")
-const {manageXServer} = require('./lib/XManager')
+const {manageXServer, XManager} = require('./lib/XManager')
 const {Launcher} = require("./lib/Launcher")
-const {parseShortcut} = require("./lib/Xutils/XKeyboard")
 
 const Logger = require("@holusion/logger");
 
@@ -22,19 +21,9 @@ class LauncherError extends WrapError{
   get type(){ return "launcher"}
 }
 
-
-/**
- * @typedef WindowManagerOptions
- * @type {object}
- * @property {boolean} [headless=false]
- * @property {Logger} [logger=Logger.logger]
- * @property {import("./lib/XManager").XManager} [manager]
- * @property {Array<[string,string]>} [shortcuts]
- */
-
 /**
  * 
- * @param {WindowManagerOptions} [opts] 
+ * @param {Config} [opts] 
  * @returns {Promise<WindowManager>}
  */
 async function manageDisplay(opts={}){
@@ -46,7 +35,7 @@ async function manageDisplay(opts={}){
       (opts.logger || Logger.logger).error(new XError(e, "Failed to start as Root Window. Falling back to headless mode"));
     }
   }
-  let m = new WindowManager({...opts, manager});
+  let m = new WindowManager(manager, opts);
   return m;
 }
 
@@ -74,14 +63,14 @@ async function manageDisplay(opts={}){
  */
 class WindowManager extends EventEmitter{
   /**
-   * 
-   * @param {WindowManagerOptions} [param0]
+   * @param {XManager} manager;
+   * @param {Config} [config]
    */
-  constructor({manager, shortcuts = [], logger = Logger.logger}={}){
+  constructor(manager, config={}){
     super();
-    this.logger = logger;
+    this.config = config;
     this.shortcuts = new Map();
-    this.launcher =  new Launcher({logger});
+    this.launcher =  new Launcher(config);
     this.hasChild = false;
 
     this.launcher.on("error",(e)=>{
@@ -120,16 +109,16 @@ class WindowManager extends EventEmitter{
       this.manager.on("error", (e)=>{
         this.emit("error", new XError(e));
       });
-      if(shortcuts){
+      if(config.shortcuts){
         try{
-          this.updateShortcuts(shortcuts);
+          this.updateShortcuts(config.shortcuts);
         }catch(e){
           this.emit("error", new XError("Failed to update shortcuts", e));
         }
       }
       this.manager.on("keydown",(e)=>{
         const action = this.shortcuts.get(e.uid);
-        logger.debug("Intercepted key press :", e.names[0] || e.keycode);
+        this.logger.debug("Intercepted key press :", e.names[0] || e.keycode);
         if(action){
           this.emit("command", action);
         }
@@ -137,8 +126,12 @@ class WindowManager extends EventEmitter{
       //handle waiting state set / cancel
     }else{
       this.logger.info("Running in headless mode");
-      if(shortcuts && 0 < shortcuts.length) this.logger.debug("Shortcuts will not work properly");
+      if(config.shortcuts && 0 < config.shortcuts.length) this.logger.debug("Shortcuts will not work properly");
     }
+  }
+
+  get logger(){
+    return this.config.logger;
   }
 
   wait(){
@@ -170,7 +163,7 @@ class WindowManager extends EventEmitter{
       this.registerShortcut(code, action);
     }
     this.shortcuts = new Map(sh.map(([keys, action])=>{
-      const code = parseShortcut(keys).uid;
+      const code = this.manager.keyboard.parseShortcut(keys).uid;
       return [code, action];
     }))
   }

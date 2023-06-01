@@ -1,55 +1,57 @@
 'use strict';
 const x11 = require('x11');
-const {getKeyMaps, getFromName, getFromUnicode, getFromCode, getModifiers, parseModifiers, parseShortcut, parseEvent} = require("../lib/Xutils/XKeyboard");
+const XKeyboard = require("../lib/Xutils/XKeyboard");
 
 describe("XKeyboard",function(){
   let test_key;
   const test_key_name = "Up";
   let client;
+  let keyboard
   before(function(done){
-    client = x11.createClient(function(err,display) {
+    client = x11.createClient(function(err, display) {
       expect(err).to.be.undefined;
-      getKeyMaps(display,function(err){
-        test_key = getFromName(test_key_name);
-        done(err);
-      })
+      XKeyboard.Init(display).then((k)=>{
+        keyboard = k;
+        test_key = keyboard.getFromName(test_key_name);
+        done();
+      }, done);
     })
   });
   after(function(){
     client.close();
   })
   //Do NOT test the soundness of the whole keysym -> keycode mapping as it's client-dependant
-  describe("getFromCode()",function(){
+  describe("keyboard.getFromCode()",function(){
     it("Match the test key",function(){
       expect(test_key.keycode).to.be.a("number");
-      const code_data = getFromCode(test_key.keycode);
+      const code_data = keyboard.getFromCode(test_key.keycode);
       expect(code_data).to.deep.equal(test_key);
     })
   })
-  describe("getFromUnicode()", function(){
+  describe("keyboard.getFromUnicode()", function(){
     it("Return a char with keycode if available",function(){
-      const space_char = getFromUnicode(0x20);
+      const space_char = keyboard.getFromUnicode(0x20);
       expect(space_char).to.be.an("object");
       expect(space_char).to.have.property("keycode").a("number");
 
     })
   })
-  describe("getFromName()", function() {
+  describe("keyboard.getFromName()", function() {
     it("Match multiple names",function(){
       //Maybe this test is too locale-dependant? some systems might not have the same two names
-      const quote_key_1 = getFromName("apostrophe");
-      const quote_key_2 = getFromName("quoteright");
+      const quote_key_1 = keyboard.getFromName("apostrophe");
+      const quote_key_2 = keyboard.getFromName("quoteright");
       expect(quote_key_1).to.be.an("object");
       expect(quote_key_2).to.be.an("object");
       expect(quote_key_1).to.deep.equal(quote_key_2);
     })
     it("is case insensitive",function(){
-      const space_char = getFromName("space");
+      const space_char = keyboard.getFromName("space");
       expect(space_char).to.be.an("object");
-      expect(getFromName("Space")).to.deep.equal(space_char);
-      expect(getFromName("SPACE")).to.deep.equal(space_char);
+      expect(keyboard.getFromName("Space")).to.deep.equal(space_char);
+      expect(keyboard.getFromName("SPACE")).to.deep.equal(space_char);
       //Also test with one that has a default Uppercased first letter
-      expect(getFromName("up")).to.deep.equal(getFromName("Up"));
+      expect(keyboard.getFromName("up")).to.deep.equal(keyboard.getFromName("Up"));
     })
   });
   const fixtures = new Map([
@@ -61,57 +63,57 @@ describe("XKeyboard",function(){
   describe("getModifiers()",function(){
     for(const [key, value] of fixtures.entries()){
       it(`Get modifiers name: ${key} => ${value}`,function(){
-        const mods = getModifiers(key);
+        const mods = keyboard.getModifiers(key);
         expect(mods).to.equal(value);
       })
     }
   })
 
-  describe("parseShortcut()", function() {
+  describe("keyboard.parseShortcut()", function() {
     for(const [key, value] of fixtures.entries()){
       it(`Parse modifiers name : ${value} => ${key}`,function(){
-        const mods = parseShortcut(value+"+Up");
+        const mods = keyboard.parseShortcut(value+"+Up");
         expect(mods).to.have.property("modifiers",key& ~2 & ~16 & ~128); //ignore lock keys
       })
     }
     it("`refuses non-string arguments",function(){
-      expect(_=>{parseShortcut({})}).to.throw(Error);
-      expect(_=>{parseShortcut()}).to.throw(Error);
-      expect(_=>{parseShortcut(null)}).to.throw(Error);
+      expect(_=>{keyboard.parseShortcut({})}).to.throw(Error);
+      expect(_=>{keyboard.parseShortcut()}).to.throw(Error);
+      expect(_=>{keyboard.parseShortcut(null)}).to.throw(Error);
     })
     it(`Accept random-order modifiers`,function(){
-      const mods1 = parseShortcut("ctrl+alt+shift+Up");
-      const mods2 = parseShortcut("ctrl+shift+alt+Up");
+      const mods1 = keyboard.parseShortcut("ctrl+alt+shift+Up");
+      const mods2 = keyboard.parseShortcut("ctrl+shift+alt+Up");
       expect(mods1).to.deep.equal(mods2);
     });
     [
       ["ctrl+shift+Return", 5, "Return"]
     ].forEach(function([shortcut, mods, key]){
       it(`Can be used on full shortcut sequence ${shortcut}`, function(){
-        const sh = parseShortcut(shortcut);
-        expect(sh).to.deep.equal(Object.assign({modifiers:mods, uid: "5+65293"},getFromName(key)));
+        const sh = keyboard.parseShortcut(shortcut);
+        expect(sh).to.deep.equal(Object.assign({modifiers:mods, uid: "5+65293"},keyboard.getFromName(key)));
       })
     })
     it("Return undefined value when shortcut is invalid",function(){
-      expect(parseShortcut("shift+foo")).to.be.undefined;
+      expect(keyboard.parseShortcut("shift+foo")).to.be.undefined;
     })
     it("Accepts lowercase and uppercase letters",function(){
-      expect(parseShortcut("A")).to.deep.equal(parseShortcut("a"));
-      expect(parseShortcut("A")).to.have.property("keycode").a("number");
+      expect(keyboard.parseShortcut("A")).to.deep.equal(keyboard.parseShortcut("a"));
+      expect(keyboard.parseShortcut("A")).to.have.property("keycode").a("number");
     })
     it(`uses case-insensitive values as much as possible`,function(){
       //Some camel-cased keys are always going to prove difficult to parse
-      const ref = parseShortcut("ctrl+alt+g");
+      const ref = keyboard.parseShortcut("ctrl+alt+g");
       expect(ref).to.be.an("object").have.property("names");
       [
         "Ctrl+alt+g",
         "Ctrl+Alt+g"
       ].forEach(t=>{
-        expect(parseShortcut(t)).to.deep.equal(ref);
+        expect(keyboard.parseShortcut(t)).to.deep.equal(ref);
       })
     });
   })
-  describe("parseEvent()",function(){
+  describe("keyboard.parseEvent()",function(){
     const sample_event = Object.freeze({
       type: 2,
       seq: 46,
@@ -133,17 +135,17 @@ describe("XKeyboard",function(){
     }
     it("Throw on unknown key",function(){
       expect(function(){
-        parseEvent(newEvent({keycode:0}));
+        keyboard.parseEvent(newEvent({keycode:0}));
       }).to.throw();
     });
     it("return modifiers as a string",function(){
-      const d = parseEvent(newEvent({ buttons:17 }));// numlock+shift
+      const d = keyboard.parseEvent(newEvent({ buttons:17 }));// numlock+shift
         expect(d).to.have.property("modifiers_name", "shift");
     });
     it("Gives the same uid for any combination of num/caps/scroll lock",function(){
-      const ref = parseEvent(newEvent({buttons:0}));
+      const ref = keyboard.parseEvent(newEvent({buttons:0}));
       [2,16,18,128,130,144,146].forEach(function(m){
-        const d = parseEvent(newEvent({buttons:m}));
+        const d = keyboard.parseEvent(newEvent({buttons:m}));
         expect(d).to.have.property("uid", ref.uid);
       })
     })

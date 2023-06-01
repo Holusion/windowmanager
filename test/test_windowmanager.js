@@ -15,8 +15,10 @@ describe("WindowManager", function(){
 
   this.beforeEach(function(){
     this.stdout = new LogData();
+    //@ts-ignore
     this.logger = new Logger({stdout: this.stdout });
-    this.wm = new WindowManager({logger:this.logger});
+    //@ts-ignore
+    this.wm = new WindowManager(undefined, {logger:this.logger});
   });
   this.afterEach(function(){
     this.wm.close();
