@@ -137,11 +137,9 @@ class WindowManager extends EventEmitter{
   wait(){
     //this.cancelWait(); //Should not happend according to state machine
     this._wait_timeout = setTimeout(()=>{
-      this.logger.debug("wait timer end. State : ", this.active);
-      if(this.manager.isExposed){
-        this.manager.focus();
-      }
-    }, 2000);
+      //this.logger.debug("wait timer end. State : ", this.active);
+      this.manager.focus(this.manager.isExposed);
+    }, 200);
   }
 
   cancelWait(){
